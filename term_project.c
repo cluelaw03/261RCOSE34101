@@ -30,7 +30,7 @@ Process proc[MAX_PROCESS];           /* 현재 실행용 작업 복사본 */
 int ready_q[MAX_PROCESS];  int ready_count = 0;   /* Ready Queue (프로세스 인덱스 저장) */
 int wait_q[MAX_PROCESS];   int wait_count  = 0;   /* Waiting Queue (I/O 중) */
 
-void create_one_process(int pid, int arrival_time, int cpu_burst, int priority){
+void create_one_process(int pid, int arrival_time, int cpu_burst, int priority, int i){
     original[i].pid          = i + 1;
     original[i].arrival_time = arrival_time;
     original[i].cpu_burst    = cpu_burst;
