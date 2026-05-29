@@ -135,7 +135,7 @@ void reset_test(void){
         test_proc[i].remaining_cpu      = test_proc[i].cpu_burst;
         test_proc[i].executed_cpu       = 0;
         test_proc[i].state              = NEW;
-        test_proc[i].fininshed          = false;
+        test_proc[i].finished          = false;
         test_proc[i].completion_time    = 0;
         test_proc[i].turnaround_time    = 0;
         test_proc[i].waiting_time       = 0;
