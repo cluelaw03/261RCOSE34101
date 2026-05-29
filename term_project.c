@@ -61,13 +61,13 @@ void enqueue_ready(int idx);
 void remove_ready_at(int pos);
 void enqueue_wait(int idx);
 void remove_wait_at(int pos);
+void process_interrupt_check(void);
 static int rand_range(int lo, int hi);
 
 int main(void) {
     srand(time(NULL));
-    printf("senaria start\n");
     create_senario();
-    printf("end\n");
+    process_interrupt_check();
     
     return 0;
 }
@@ -83,12 +83,10 @@ void create_one_process(int pid, int arrival_time, int cpu_burst, int priority, 
 }
 
 void create_interrupt(int start_time, int duration, int target_pid, Interrupt_Type type, int i){
-    Interrupt intr;
-    intr.start_time = start_time;
-    intr.duration = duration;
-    intr.target_pid = target_pid;
-    intr.type = type;
-    scen_intr[i] = intr;
+    scen_intr[i].start_time = start_time;
+    scen_intr[i].duration   = duration;
+    scen_intr[i].target_pid = target_pid;
+    scen_intr[i].type       = type;
     return;
 }
 
@@ -97,13 +95,13 @@ void create_senario(void) {
     proc_n=0; intr_n=0;
     while(ti<MAX_TIME){
         int r = rand_range(1,100);
-        if((r<=proc_percentage)&&(proc_n<=MAX_PROCESS)){
+        if((r<=proc_percentage)&&(proc_n<MAX_PROCESS)){
             create_one_process(proc_n,ti,rand_range(1,10),rand_range(1,5),proc_n);
             proc_n++;
         }
         r = rand_range(1,100);
-        if((r<=intr_percentage)&&(intr_n<=MAX_EVENTS)){
-            create_interrupt(ti,rand_range(1,5),rand_range(0,proc_n-1),rand_range(0,1) ? IO_start : SYSCALL_start,intr_n);
+        if((r<=intr_percentage)&&(intr_n<MAX_EVENTS)){
+            create_interrupt(ti,rand_range(1,5),0,(rand_range(0,1) ? IO_start : SYSCALL_start),intr_n);
             intr_n++;
         }
         ti++;
@@ -115,6 +113,7 @@ static int rand_range(int lo, int hi) { return lo + rand() % (hi - lo + 1); }
 
 
 /* ---------------- 큐 보조 함수 ---------------- */
+
 void enqueue_ready(int idx) {
     ready_q[ready_count++] = idx;
     scen_proc[idx].state = READY;
@@ -132,4 +131,16 @@ void remove_wait_at(int pos) {
     for (int i = pos; i < wait_count - 1; i++)
         wait_q[i] = wait_q[i + 1];
     wait_count--;
+}
+
+void process_interrupt_check(void){
+    for(int i=0;i<proc_n;i++){
+        Process p = scen_proc[i];
+        printf("pid : %d, state : %d start_time : %d duration : %d\n",p.pid,p.state,p.arrival_time,p.cpu_burst);
+    }
+    printf("\n");
+    for(int i=0;i<intr_n;i++){
+        Interrupt intr = scen_intr[i];
+        printf("start_time : %d, duration : %d, target_pid : %d, type : %d\n",intr.start_time,intr.duration,intr.target_pid,intr.type);
+    }
 }
