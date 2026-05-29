@@ -4,9 +4,9 @@
 #include <time.h>
 #include <stdbool.h>
 
-#define MAX_PROCESS  64     /* 최대 프로세스 수 */
-#define MAX_EVENTS     512          /* 사전 생성 인터럽트 시나리오 최대 개수 */
-#define MAX_TIME     2000   /* 시뮬레이션 안전 한계 시간 */
+#define MAX_PROCESS  20     /* 최대 프로세스 수 */
+#define MAX_EVENTS     50          /* 사전 생성 인터럽트 시나리오 최대 개수 */
+#define MAX_TIME     500   /* 시뮬레이션 안전 한계 시간 */
 #define TIME_QUANTUM 3      /* Round Robin 의 타임 퀀텀 */
 
 /* 타입 정의 -------------------------------------------------------- */
@@ -48,8 +48,8 @@ Interrupt test_intr[MAX_EVENTS];
  
 int ready_q[MAX_PROCESS];  int ready_count = 0;   /* Ready Queue (프로세스 인덱스 저장) */
 int wait_q[MAX_PROCESS];   int wait_count  = 0;   /* Waiting Queue (I/O 중) */
-int proc_percentage;              /* 시나리오 생성 시 사용할 확률 (%) */
-int intr_percentage;             /* 시나리오 생성 시 사용할 확률 (%) */
+int proc_percentage=10;              /* 시나리오 생성 시 사용할 확률 (%) */
+int intr_percentage=5;             /* 시나리오 생성 시 사용할 확률 (%) */
 
 int proc_n=0;                 /* 시나리오 생성된 프로세스 수 */
 int intr_n=0;                 /* 시나리오 생성된 인터럽트 수 */
@@ -63,9 +63,11 @@ void enqueue_wait(int idx);
 void remove_wait_at(int pos);
 static int rand_range(int lo, int hi);
 
-int main(int argc, char* argv[]) {
+int main(void) {
     srand(time(NULL));
+    printf("senaria start\n");
     create_senario();
+    printf("end\n");
     
     return 0;
 }
@@ -104,6 +106,7 @@ void create_senario(void) {
             create_interrupt(ti,rand_range(1,5),rand_range(0,proc_n-1),rand_range(0,1) ? IO_start : SYSCALL_start,intr_n);
             intr_n++;
         }
+        ti++;
     }
 }
 
