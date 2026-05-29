@@ -1,0 +1,44 @@
+#ifndef TYPES_H
+#define TYPES_H
+
+#include <stdbool.h>
+
+#define MAX_PROCESS  20     /* 최대 프로세스 수 */
+#define MAX_EVENTS     50          /* 사전 생성 인터럽트 시나리오 최대 개수 */
+#define MAX_TIME     500   /* 시뮬레이션 안전 한계 시간 */
+#define TIME_QUANTUM 3      /* Round Robin 의 타임 퀀텀 */
+#define ALG_N         6      /* 알고리즘 수 */
+
+/* 타입 정의 -------------------------------------------------------- */
+typedef enum{
+    FCFS, SJF_NP, SJF_P, PRIO_NP, PRIO, RR   
+} Schedule_Type;
+
+typedef enum{
+    NEW, READY, RUNNING, WAITING, TERMINATED
+} State;
+
+typedef enum{
+    IO_start,IO_end, SYSCALL_start, SYSCALL_end
+} Interrupt_Type;
+/* ----------------------------------------------------------------- */
+
+/* 구조체 자료형 정의--------------------------------------------------- */
+typedef struct {
+    int pid;    int arrival_time;   int cpu_burst;  int priority;
+    State state;
+    int remaining_cpu;  int executed_cpu;
+
+    bool finished;
+    //evaluation용
+    int completion_time; int turnaround_time; int waiting_time;
+    int total_blocked_time;
+} Process;
+
+typedef struct{
+    int start_time; int duration;  int target_pid;
+    Interrupt_Type type;
+} Interrupt;
+/* ----------------------------------------------------------------- */
+
+#endif /* TYPES_H */
