@@ -39,7 +39,7 @@ void check_terminate(int *running, int t) {
         test_proc[*running].turnaround_time = test_proc[*running].completion_time - test_proc[*running].arrival_time;
         test_proc[*running].waiting_time    = test_proc[*running].turnaround_time - test_proc[*running].cpu_burst - test_proc[*running].total_blocked_time;
         *running = -1;
-        return true;
+        return;
     }
     return;
 }
@@ -114,7 +114,7 @@ void schedule_fcfs(void) {
             }
         }
         tick_run(running, intr_running);              //실행중인 프로세스 1 tick 실행
-        check_terminate(&running); //실행중인 프로세스 종료 체크 및 running -1
+        check_terminate(&running, t); //실행중인 프로세스 종료 체크 및 running -1
     }
     finalize_stats(FCFS);         //결과 계산 및 저장 
 }
