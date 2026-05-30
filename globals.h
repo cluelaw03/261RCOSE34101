@@ -15,7 +15,9 @@ extern int proc_n;
 extern int intr_n;
 
 extern PQueue ready_q;                              /* Ready Queue (우선순위 큐) */
-extern PQueue wait_q;                               /* Waiting Queue (I/O 중) */
+extern Queue wait_q;                               /* Waiting Queue (I/O 중) */
+extern Queue ready_fifo;                              /* Ready Queue (FCFS) */
+extern bool is_ready_fifo;                            /* RR 알고리즘에서 ready_fifo 사용 여부 */
 extern PQueue JOB_q;                                /* Job Queue (도착 안 한 프로세스) */
 extern int proc_percentage;              /* 시나리오 생성 시 사용할 확률 (%) */
 extern int intr_percentage;             /* 시나리오 생성 시 사용할 확률 (%) */

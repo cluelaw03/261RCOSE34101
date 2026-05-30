@@ -45,7 +45,7 @@ void tick_run(int* running,int* intr_running, int* time_quantum) {
     */
 }
 
-void check_terminate(int *running, int t) {
+void check_terminate(int *running, int t, int * time_quantum) {
     if ((*running) < 0) return;
     if (test_proc[*running].remaining_cpu == 0) {
         test_proc[*running].state           = TERMINATED;
@@ -88,8 +88,10 @@ void apply_interrupts(EVENT_Type event_type, int *running, int *intr_running) {
             break;
         }
         case TIMEOUT:{
-            enqueue_ready(*running);
-            (*running)=-1;
+            if(*running>=0){
+                enqueue_ready(*running);
+                (*running)=-1;
+            }
             break;
         }
         default: break;
@@ -132,7 +134,10 @@ void scheduler_6(Schedule_Type alg){
         default: break;
     }
     reset_test();
-    pq_init(&ready_q, pick_func);     /* Ready Queue 를 초기화 */
+    is_ready_fifo = (alg == RR);
+    if (is_ready_fifo) q_init(&ready_fifo);
+    else               pq_init(&ready_q, pick_func);
+
     pq_init(&wait_q, cmp_fcfs);         /* Waiting Queue 는 FCFS 로 관리 */
     int running = -1; int intr_running=-1;
     int proc_counted=0; int intr_counted=0;
@@ -175,10 +180,11 @@ void scheduler_6(Schedule_Type alg){
             if (idx >= 0) {
                 running = idx;
                 test_proc[running].state = RUNNING;
+                if(alg==RR) time_quantum=TIME_QUANTUM;
             }
         }
         tick_run(&running, &intr_running, &time_quantum);              //실행중인 프로세스 1 tick 실행
-        check_terminate(&running, t); //실행중인 프로세스 종료 체크 및 running -1
+        check_terminate(&running, t, &time_quantum); //실행중인 프로세스 종료 체크 및 running -1
     }
     finalize_stats(alg);         //결과 계산 및 저장 
 }

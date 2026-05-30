@@ -13,17 +13,17 @@ int main(void) {
     create_senario();
 
     scheduler_6(FCFS);
-    print_gantt(FCFS);
+    print_result(FCFS);
     scheduler_6(SJF_NP);
-    print_gantt(SJF_NP);
+    print_result(SJF_NP);
     scheduler_6(SJF_P);
-    print_gantt(SJF_P);
+    print_result(SJF_P);
     scheduler_6(PRIO_NP);
-    print_gantt(PRIO_NP);
+    print_result(PRIO_NP);
     scheduler_6(PRIO);
-    print_gantt(PRIO);
+    print_result(PRIO);
     scheduler_6(RR);
-    print_gantt(RR);
-    
+    print_result(RR);
+
     return 0;
 }

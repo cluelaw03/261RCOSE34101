@@ -11,7 +11,9 @@ int proc_n;
 int intr_n;
  
 PQueue ready_q;                              /* Ready Queue (우선순위 큐) */
-PQueue wait_q;                               /* Waiting Queue (I/O 중) */
+Queue ready_fifo;                              /* Ready Queue (FCFS) */
+bool is_ready_fifo;                            /* RR 알고리즘에서 ready_fifo 사용 여부 */
+Queue wait_q;                               /* Waiting Queue (I/O 중) */
 PQueue JOB_q;                                /* Job Queue (도착 안 한 프로세스) */  
 int proc_percentage=10;              /* 시나리오 생성 시 사용할 확률 (%) */
 int intr_percentage=5;             /* 시나리오 생성 시 사용할 확률 (%) */

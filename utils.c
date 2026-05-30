@@ -6,7 +6,7 @@
 /* ---------------- 유틸 ---------------- */
 int rand_range(int lo, int hi) { return lo + rand() % (hi - lo + 1); }
 
-void reset_test(void){
+void reset_test(void){ 
     proc_n = scen_proc_n;
     intr_n = scen_intr_n;
 
@@ -27,21 +27,27 @@ void reset_test(void){
     }
 
     pq_init(&ready_q, NULL);  /* ready_q 는 각 스케줄러가 pq_init 으로 비교함수와 함께 초기화 */    
-    pq_init(&wait_q, NULL);   /* 대기 큐 초기화 (ready_q 는 각 스케줄러가 pq_init 으로 비교함수와 함께 초기화) */
+    q_init(&ready_fifo);     /* ready_fifo 는 RR 알고리즘에서만 사용 */
+    q_init(&wait_q);   /* 대기 큐 초기화 (ready_q 는 각 스케줄러가 pq_init 으로 비교함수와 함께 초기화) */
 }
 
 /* ---------------- 큐 보조 함수 ---------------- */
 void enqueue_ready(int idx) {
-    pq_push(&ready_q, idx);
+    if (is_ready_fifo) {
+        q_push(&ready_fifo, idx);
+    } else {
+        pq_push(&ready_q, idx);
+    }
     test_proc[idx].state = READY;
 }
 int dequeue_ready(void) {                       /* 우선순위 큐에서 최우선 프로세스 꺼냄 */
+    if(is_ready_fifo)   return q_pop(&ready_fifo);
     return pq_pop(&ready_q);                    /* 비었으면 -1 */
 }
 void enqueue_wait(int idx) {
-    pq_push(&wait_q, idx);
+    q_push(&wait_q, idx);
     test_proc[idx].state = WAITING;
 }
 int dequeue_wait(void) {                        /* 대기 큐에서 가장 앞 프로세스 꺼냄 */
-    return pq_pop(&wait_q);
+    return q_pop(&wait_q);
 }

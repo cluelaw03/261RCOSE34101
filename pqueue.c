@@ -39,3 +39,27 @@ int pq_pop(PQueue *pq) {
 
 int pq_peek(PQueue *pq) { return pq->size ? pq->heap[0] : -1; }
 int pq_empty(PQueue *pq) { return pq->size == 0; }
+
+void q_init(Queue *q) {
+    q->head = 0;
+    q->tail = 0;
+    q->size = 0;
+}
+ 
+void q_push(Queue *q, int idx) {
+    if (q->size >= MAX_PROCESS) return;   /* 가득 차면 무시(안전장치) */
+    q->items[q->tail] = idx;
+    q->tail = (q->tail + 1) % MAX_PROCESS;
+    q->size++;
+}
+ 
+int q_pop(Queue *q) {
+    if (q->size == 0) return -1;          /* 비었으면 -1 */
+    int front = q->items[q->head];
+    q->head = (q->head + 1) % MAX_PROCESS;
+    q->size--;
+    return front;
+}
+ 
+int q_peek(Queue *q) { return q->size ? q->items[q->head] : -1; }
+int q_empty(Queue *q) { return q->size == 0; }
