@@ -10,22 +10,21 @@ int cmp_fcfs(int a, int b) {
     return test_proc[a].pid - test_proc[b].pid;
 }
 
-void tick_run(int running,int intr_running) {
+void tick_run(int* running,int* intr_running) {
     if (running >= 0) {
-        test_proc[running].remaining_cpu--;
-        test_proc[running].executed_cpu++;
+        test_proc[*running].remaining_cpu--;
+        test_proc[*running].executed_cpu++;
     }
     else{
-        int running_intr=intr_running;
-        test_intr[running_intr].left_time--;
-        test_proc[running].total_blocked_time++;
+        test_intr[*intr_running].left_time--;
+        test_proc[test_intr[*intr_running].proc_id].total_blocked_time++;
 
-        if(test_intr[running_intr].left_time<=0){
-            test_intr[running_intr].left_time=0;
+        if(test_intr[*intr_running].left_time<=0){
+            test_intr[*intr_running].left_time=0;
             isblocked=false;
             dequeue_wait();
-            test_proc[running].state = READY;
-            intr_running=-1;
+            test_proc[test_intr[*intr_running].proc_id].state = READY;
+            *intr_running=-1;
         }
     }
 }
@@ -113,7 +112,7 @@ void schedule_fcfs(void) {
                 test_proc[running].state = RUNNING;
             }
         }
-        tick_run(running, intr_running);              //실행중인 프로세스 1 tick 실행
+        tick_run(&running, &intr_running);              //실행중인 프로세스 1 tick 실행
         check_terminate(&running, t); //실행중인 프로세스 종료 체크 및 running -1
     }
     finalize_stats(FCFS);         //결과 계산 및 저장 
