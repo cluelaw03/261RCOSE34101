@@ -28,11 +28,13 @@ void create_senario(void) {
             create_one_process(scen_proc_n,ti,rand_range(1,10),rand_range(1,5),scen_proc_n);
             scen_proc_n++;
         }
+        /*
         r = rand_range(1,100);
         if((r<=intr_percentage)&&(scen_intr_n<MAX_EVENTS)){
             create_interrupt(ti,rand_range(1,5),0,0,scen_intr_n);
             scen_intr_n++;
-        }
+        } --- 인터럽트는 일단 무시 ---
+        */
         ti++;
     }
 }
@@ -42,9 +44,11 @@ void process_interrupt_check(void){
         Process p = scen_proc[i];
         printf("pid : %d, state : %d start_time : %d duration : %d\n",p.pid,p.state,p.arrival_time,p.cpu_burst);
     }
+    /*
     printf("\n");
     for(int i=0;i<scen_intr_n;i++){
         EVENT intr = scen_intr[i];
         printf("start : %d, dur : %d, target_pid : %d, type : %d\n",intr.start_time,intr.duration,intr.target_pid,intr.type);
     }
+    */ --- 인터럽트는 일단 무시 ---
 }

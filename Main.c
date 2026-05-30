@@ -5,6 +5,8 @@
 #include "scenario.h"
 #include "utils.h"
 #include "scheduler.h"
+#include "GetPut.h"
+#include "pqueue.h"
 
 int main(void) {
     srand(time(NULL));

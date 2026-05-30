@@ -37,5 +37,5 @@ int pq_pop(PQueue *pq) {
     return top;
 }
 
-int pq_peek(const PQueue *pq) { return pq->size ? pq->heap[0] : -1; }
-int pq_empty(const PQueue *pq) { return pq->size == 0; }
+int pq_peek(PQueue *pq) { return pq->size ? pq->heap[0] : -1; }
+int pq_empty(PQueue *pq) { return pq->size == 0; }

@@ -12,6 +12,7 @@ int intr_n;
  
 PQueue ready_q;                              /* Ready Queue (우선순위 큐) */
 PQueue wait_q;                               /* Waiting Queue (I/O 중) */
+PQueue JOB_q;                                /* Job Queue (도착 안 한 프로세스) */  
 int proc_percentage=10;              /* 시나리오 생성 시 사용할 확률 (%) */
 int intr_percentage=5;             /* 시나리오 생성 시 사용할 확률 (%) */
 bool isblocked;
@@ -22,6 +23,8 @@ double      result_turn[ALG_N];
 int         result_done[ALG_N];   /* 완료한 프로세스 수 */
 int         result_total[ALG_N];  /* 시나리오상 등장한 프로세스 수  */
 
+int         gantt_pid[MAX_GANTT];
+int         gantt_n;
 
 char *schedule_name[ALG_N] = {
     "FCFS", "Non-Preemptive SJF", "Preemptive SJF",

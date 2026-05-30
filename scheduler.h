@@ -12,7 +12,7 @@ void tick_run(int *running, int *intr_running, int *time_quantum);
 void advance_interrupts(void);
 void check_terminate(int *running, int t);
 void finalize_stats(Schedule_Type alg);
-void apply_interrupts(EVENT_Type intr_type, int *running);
-void advance_interrupts(void);
+void apply_interrupts(EVENT_Type intr_type, int *running, int *intr_running);
+//void advance_interrupts(void);
 
 #endif /* SCHEDULER_H */

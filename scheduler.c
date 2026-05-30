@@ -25,30 +25,35 @@ void tick_run(int* running,int* intr_running, int* time_quantum) {
         test_proc[*running].remaining_cpu--;
         test_proc[*running].executed_cpu++;
         (*time_quantum)--;
+        gantt_pid[gantt_n++] = test_proc[*running].pid;
     }
+    else {
+        gantt_pid[gantt_n++] = -1;
+    }
+    /*
     else{
         test_intr[*intr_running].left_time--;
-        test_proc[test_intr[*intr_running].target_pid].total_blocked_time++;
 
         if(test_intr[*intr_running].left_time<=0){
             test_intr[*intr_running].left_time=0;
             isblocked=false;
             dequeue_wait();
-            test_proc[test_intr[*intr_running].target_pid].state = READY;
+            test_proc[pq_peek(&wait_q)].state = READY;
             (*intr_running)=-1;
         }
     }
+    */
 }
 
 void check_terminate(int *running, int t) {
-    if (*running < 0) return;
+    if ((*running) < 0) return;
     if (test_proc[*running].remaining_cpu == 0) {
         test_proc[*running].state           = TERMINATED;
         test_proc[*running].finished        = 1;
         test_proc[*running].completion_time = t + 1;
         test_proc[*running].turnaround_time = test_proc[*running].completion_time - test_proc[*running].arrival_time;
         test_proc[*running].waiting_time    = test_proc[*running].turnaround_time - test_proc[*running].cpu_burst - test_proc[*running].total_blocked_time;
-        *running = -1;
+        (*running) = -1;
         return;
     }
     return;
@@ -70,19 +75,21 @@ void finalize_stats(Schedule_Type algo) {
     result_turn[algo]  = done ? total_turn / done : 0.0;
 }
 
-void apply_interrupts(EVENT_Type event_type, int *running){
+
+void apply_interrupts(EVENT_Type event_type, int *running, int *intr_running) {
     switch(event_type){
         case IO:    {
             isblocked = true;
-            if(*running>=0){
+
+            if((*running)>=0){
                 enqueue_wait(*running);
-                *running=-1;
+                (*running)=-1;
             }
             break;
         }
         case TIMEOUT:{
             enqueue_ready(*running);
-            *running=-1;
+            (*running)=-1;
             break;
         }
         default: break;
@@ -126,6 +133,7 @@ void scheduler_6(Schedule_Type alg){
     }
     reset_test();
     pq_init(&ready_q, pick_func);     /* Ready Queue 를 초기화 */
+    pq_init(&wait_q, cmp_fcfs);         /* Waiting Queue 는 FCFS 로 관리 */
     int running = -1; int intr_running=-1;
     int proc_counted=0; int intr_counted=0;
     int proc_time = -1; int intr_time = -1;
@@ -136,8 +144,8 @@ void scheduler_6(Schedule_Type alg){
     for (int t = 0; t < MAX_TIME; t++) {
         if(time_quantum<=0){
             if(is_preemptive==true){
-                apply_interrupts(TIMEOUT, &running);
-                intr_running=-1;
+                apply_interrupts(TIMEOUT, &running, &intr_running);
+                running=-1;
             }
             time_quantum=TIME_QUANTUM;
         }
@@ -153,14 +161,15 @@ void scheduler_6(Schedule_Type alg){
             if(proc_n>proc_counted) 
                 proc_time = test_proc[proc_counted].arrival_time;
         }
+        /*
         if(intr_time==t){
-            apply_interrupts(test_intr[intr_counted].type, &running);
-            intr_running=intr_counted;
             intr_counted++;
+            intr_running=intr_counted;
+            apply_interrupts(test_intr[intr_counted].type, &running, &intr_running);
                if(intr_n>intr_counted)
                  intr_time = test_intr[intr_counted].start_time;
         } // 프로세스 도착과 인터럽트 발생 체크
-
+        */
         if (running == -1&&isblocked==false) {                 /* non-preemptive: 비었을 때만 선택 */
             int idx = dequeue_ready();        /* 우선순위 큐에서 최우선 프로세스 꺼냄 */
             if (idx >= 0) {
