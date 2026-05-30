@@ -5,7 +5,7 @@
 #include "scenario.h"
 #include "utils.h"
 #include "scheduler.h"
-#include "GetPut.h"
+#include "getput.h"
 #include "pqueue.h"
 
 int main(void) {

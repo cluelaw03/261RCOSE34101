@@ -49,6 +49,6 @@ void process_interrupt_check(void){
     for(int i=0;i<scen_intr_n;i++){
         EVENT intr = scen_intr[i];
         printf("start : %d, dur : %d, target_pid : %d, type : %d\n",intr.start_time,intr.duration,intr.target_pid,intr.type);
-    }
-    */ --- 인터럽트는 일단 무시 ---
+    } --- 인터럽트는 일단 무시 ---
+    */
 }
