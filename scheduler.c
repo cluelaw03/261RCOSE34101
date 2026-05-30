@@ -1,9 +1,18 @@
 #include "scheduler.h"
 #include "globals.h"
 #include "utils.h"
+#include "pqueue.h"
+
+/* FCFS: 도착 시각이 빠른 순. 같으면 pid 가 작은 순(먼저 생성된 프로세스). */
+static int cmp_fcfs(int a, int b) {
+    if (test_proc[a].arrival_time != test_proc[b].arrival_time)
+        return test_proc[a].arrival_time - test_proc[b].arrival_time;
+    return test_proc[a].pid - test_proc[b].pid;
+}
 
 void schedule_fcfs(void) {
     reset_test();
+    pq_init(&ready_q, cmp_fcfs);     /* Ready Queue 를 FCFS 기준으로 초기화 */
     int running = -1;
     int proc_queued=0; int intr_queued=0;
     int proc_time = -1; int intr_time = -1;
@@ -27,10 +36,9 @@ void schedule_fcfs(void) {
 
 
         if (running == -1) {                 /* non-preemptive: 비었을 때만 선택 */
-            int pos = pick_fifo();//구현필요 레디큐에서 뽑기
-            if (pos >= 0) {
-                running = ready_q[pos];
-                remove_ready_at(pos);
+            int idx = dequeue_ready();        /* 우선순위 큐에서 최우선 프로세스 꺼냄 */
+            if (idx >= 0) {
+                running = idx;
                 test_proc[running].state = RUNNING;
             }
         }

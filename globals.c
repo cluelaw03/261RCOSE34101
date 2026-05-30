@@ -10,7 +10,7 @@ int scen_intr_n=0;                 /* 시나리오 생성된 인터럽트 수 */
 int proc_n;
 int intr_n;
  
-int ready_q[MAX_PROCESS];  int ready_count = 0;   /* Ready Queue (프로세스 인덱스 저장) */
+PQueue ready_q;                              /* Ready Queue (우선순위 큐) */
 int wait_q[MAX_PROCESS];   int wait_count  = 0;   /* Waiting Queue (I/O 중) */
 int proc_percentage=10;              /* 시나리오 생성 시 사용할 확률 (%) */
 int intr_percentage=5;             /* 시나리오 생성 시 사용할 확률 (%) */
