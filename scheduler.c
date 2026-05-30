@@ -9,11 +9,22 @@ int cmp_fcfs(int a, int b) {
         return test_proc[a].arrival_time - test_proc[b].arrival_time;
     return test_proc[a].pid - test_proc[b].pid;
 }
+int cmp_remaining(int a, int b) {
+    if (test_proc[a].remaining_cpu != test_proc[b].remaining_cpu)
+        return test_proc[a].remaining_cpu - test_proc[b].remaining_cpu;
+    return test_proc[a].pid - test_proc[b].pid;
+}
+int cmp_priority(int a, int b) {
+    if (test_proc[a].priority != test_proc[b].priority)
+        return test_proc[a].priority - test_proc[b].priority;
+    return test_proc[a].pid - test_proc[b].pid;
+}
 
-void tick_run(int* running,int* intr_running) {
+void tick_run(int* running,int* intr_running, int* time_quantum) {
     if (running >= 0) {
         test_proc[*running].remaining_cpu--;
         test_proc[*running].executed_cpu++;
+        *time_quantum--;
     }
     else{
         test_intr[*intr_running].left_time--;
@@ -78,10 +89,43 @@ void apply_interrupts(EVENT_Type event_type, int *running){
    }
 }
 
+void scheduler(schedule_Type alg){
+    bool is_primitive=false; int time_quantum=MAX_TIME;
+    int *pick_func(int,int);
 
-void schedule_fcfs(void) {
+    switch(alg) {
+        case FCFS: {
+            pick_func = cmp_fcfs;
+            break;
+        }
+        case SJF_NP: {
+            pick_func = cmp_remaining;
+            break;
+        }
+        case SJF_P: {
+            is_primitive=true;
+            pick_func = cmp_remaining;
+            break;
+        }
+        case PRIO_NP: {
+            pick_func = cmp_priority;
+            break;
+        }
+        case PRIO: {
+            is_primitive=true;
+            pick_func = cmp_priority;
+            break;
+        }
+        case RR: {
+            pick_func = cmp_fcfs;
+            is_primitive=true;
+            time_quantum=TIME_QUANTUM;
+            break;
+        }
+        default: break;
+    }
     reset_test();
-    pq_init(&ready_q, cmp_fcfs);     /* Ready Queue 를 FCFS 기준으로 초기화 */
+    pq_init(&ready_q, pick_func);     /* Ready Queue 를 초기화 */
     int running = -1; int intr_running=-1;
     int proc_counted=0; int intr_counted=0;
     int proc_time = -1; int intr_time = -1;
@@ -91,6 +135,12 @@ void schedule_fcfs(void) {
 
     for (int t = 0; t < MAX_TIME; t++) {
         if(proc_time==t){
+            if(preemptive==true&&running>=0){
+                if(pick_func(test_proc[proc_counted].pid-1,running)<0){
+                    enqueue_ready(running);
+                    running=-1;
+                }
+            }
             enqueue_ready(test_proc[proc_counted].pid-1);
             proc_counted++;
             if(proc_n>proc_counted) 
@@ -103,7 +153,13 @@ void schedule_fcfs(void) {
                if(intr_n>intr_counted)
                  intr_time = test_intr[intr_counted].start_time;
         } // 프로세스 도착과 인터럽트 발생 체크
-
+        if(time_quantum<=0){
+            if(is_primitive==true){
+                apply_interrupts(TIMEOUT, &running);
+                intr_running=-1;
+            }
+            time_quantum=TIME_QUANTUM;
+        }
 
         if (running == -1&&isblocked==false) {                 /* non-preemptive: 비었을 때만 선택 */
             int idx = dequeue_ready();        /* 우선순위 큐에서 최우선 프로세스 꺼냄 */
@@ -112,8 +168,8 @@ void schedule_fcfs(void) {
                 test_proc[running].state = RUNNING;
             }
         }
-        tick_run(&running, &intr_running);              //실행중인 프로세스 1 tick 실행
+        tick_run(&running, &intr_running, &time_quantum);              //실행중인 프로세스 1 tick 실행
         check_terminate(&running, t); //실행중인 프로세스 종료 체크 및 running -1
     }
-    finalize_stats(FCFS);         //결과 계산 및 저장 
+    finalize_stats(alg);         //결과 계산 및 저장 
 }
