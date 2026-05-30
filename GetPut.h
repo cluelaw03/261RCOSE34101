@@ -1,4 +1,4 @@
-ifndef GETPUT_H
+#ifndef GETPUT_H
 #define GETPUT_H
 
 #include "types.h"

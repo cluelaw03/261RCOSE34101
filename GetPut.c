@@ -1,4 +1,5 @@
 #include "getput.h"
+#include <stdio.h>
 
 void print_gantt(void) {
     int starts[MAX_GANTT], pids[MAX_GANTT], seg = 0;
