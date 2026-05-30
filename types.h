@@ -6,7 +6,7 @@
 #define MAX_PROCESS  20     /* 최대 프로세스 수 */
 #define MAX_EVENTS     50          /* 사전 생성 인터럽트 시나리오 최대 개수 */
 #define MAX_TIME     500   /* 시뮬레이션 안전 한계 시간 */
-#define MAX_GANTT      MAX_TIME
+#define MAX_GANTT    500   /* 간트 차트 최대 길이 */
 #define TIME_QUANTUM 3      /* Round Robin 의 타임 퀀텀 */
 #define ALG_N         6      /* 알고리즘 수 */
 #define CPU_MIN        4
