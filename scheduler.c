@@ -24,7 +24,7 @@ void tick_run(int* running,int* intr_running, int* time_quantum) {
     if (*running >= 0) {
         test_proc[*running].remaining_cpu--;
         test_proc[*running].executed_cpu++;
-        *time_quantum--;
+        (*time_quantum)--;
     }
     else{
         test_intr[*intr_running].left_time--;
@@ -35,7 +35,7 @@ void tick_run(int* running,int* intr_running, int* time_quantum) {
             isblocked=false;
             dequeue_wait();
             test_proc[test_intr[*intr_running].target_pid].state = READY;
-            *intr_running=-1;
+            (*intr_running)=-1;
         }
     }
 }
