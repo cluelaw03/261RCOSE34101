@@ -5,9 +5,9 @@
 #include "pqueue.h"
 
 extern Process scen_proc[MAX_PROCESS];
-extern Interrupt scen_intr[MAX_EVENTS];
+extern EVENT scen_intr[MAX_EVENTS];
 extern Process test_proc[MAX_PROCESS];
-extern Interrupt test_intr[MAX_EVENTS];
+extern EVENT test_intr[MAX_EVENTS];
 
 extern int scen_proc_n;                 /* 시나리오 생성된 프로세스 수 */
 extern int scen_intr_n;                 /* 시나리오 생성된 인터럽트 수 */
@@ -15,7 +15,7 @@ extern int proc_n;
 extern int intr_n;
 
 extern PQueue ready_q;                              /* Ready Queue (우선순위 큐) */
-extern int wait_q[MAX_PROCESS];   extern int wait_count;    /* Waiting Queue (I/O 중) */
+extern PQueue wait_q;                               /* Waiting Queue (I/O 중) */
 extern int proc_percentage;              /* 시나리오 생성 시 사용할 확률 (%) */
 extern int intr_percentage;             /* 시나리오 생성 시 사용할 확률 (%) */
 extern bool isblocked;

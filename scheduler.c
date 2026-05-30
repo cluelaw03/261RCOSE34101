@@ -21,20 +21,20 @@ int cmp_priority(int a, int b) {
 }
 
 void tick_run(int* running,int* intr_running, int* time_quantum) {
-    if (running >= 0) {
+    if (*running >= 0) {
         test_proc[*running].remaining_cpu--;
         test_proc[*running].executed_cpu++;
         *time_quantum--;
     }
     else{
         test_intr[*intr_running].left_time--;
-        test_proc[test_intr[*intr_running].proc_id].total_blocked_time++;
+        test_proc[test_intr[*intr_running].target_pid].total_blocked_time++;
 
         if(test_intr[*intr_running].left_time<=0){
             test_intr[*intr_running].left_time=0;
             isblocked=false;
             dequeue_wait();
-            test_proc[test_intr[*intr_running].proc_id].state = READY;
+            test_proc[test_intr[*intr_running].target_pid].state = READY;
             *intr_running=-1;
         }
     }
@@ -89,9 +89,9 @@ void apply_interrupts(EVENT_Type event_type, int *running){
    }
 }
 
-void scheduler(schedule_Type alg){
-    bool is_primitive=false; int time_quantum=MAX_TIME;
-    int *pick_func(int,int);
+void scheduler_6(Schedule_Type alg){
+    bool is_preemptive=false; int time_quantum=MAX_TIME;
+    int (*pick_func)(int,int);
 
     switch(alg) {
         case FCFS: {
@@ -103,7 +103,7 @@ void scheduler(schedule_Type alg){
             break;
         }
         case SJF_P: {
-            is_primitive=true;
+            is_preemptive=true;
             pick_func = cmp_remaining;
             break;
         }
@@ -112,13 +112,13 @@ void scheduler(schedule_Type alg){
             break;
         }
         case PRIO: {
-            is_primitive=true;
+            is_preemptive=true;
             pick_func = cmp_priority;
             break;
         }
         case RR: {
             pick_func = cmp_fcfs;
-            is_primitive=true;
+            is_preemptive=true;
             time_quantum=TIME_QUANTUM;
             break;
         }
@@ -134,8 +134,15 @@ void scheduler(schedule_Type alg){
     if(intr_n>0) intr_time = test_intr[0].start_time;
 
     for (int t = 0; t < MAX_TIME; t++) {
+        if(time_quantum<=0){
+            if(is_preemptive==true){
+                apply_interrupts(TIMEOUT, &running);
+                intr_running=-1;
+            }
+            time_quantum=TIME_QUANTUM;
+        }
         if(proc_time==t){
-            if(preemptive==true&&running>=0){
+            if(is_preemptive==true&&running>=0){
                 if(pick_func(test_proc[proc_counted].pid-1,running)<0){
                     enqueue_ready(running);
                     running=-1;
@@ -153,13 +160,6 @@ void scheduler(schedule_Type alg){
                if(intr_n>intr_counted)
                  intr_time = test_intr[intr_counted].start_time;
         } // 프로세스 도착과 인터럽트 발생 체크
-        if(time_quantum<=0){
-            if(is_primitive==true){
-                apply_interrupts(TIMEOUT, &running);
-                intr_running=-1;
-            }
-            time_quantum=TIME_QUANTUM;
-        }
 
         if (running == -1&&isblocked==false) {                 /* non-preemptive: 비었을 때만 선택 */
             int idx = dequeue_ready();        /* 우선순위 큐에서 최우선 프로세스 꺼냄 */

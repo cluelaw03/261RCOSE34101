@@ -11,7 +11,7 @@ void create_one_process(int pid, int arrival_time, int cpu_burst, int priority, 
     scen_proc[i].state        = NEW;
     return;
 }
-void create_interrupt(int start_time, int duration, int target_pid, Interrupt_Type type, int i){
+void create_interrupt(int start_time, int duration, int target_pid, EVENT_Type type, int i){
     scen_intr[i].start_time = start_time;
     scen_intr[i].duration   = duration;
     scen_intr[i].target_pid = target_pid;
@@ -30,7 +30,7 @@ void create_senario(void) {
         }
         r = rand_range(1,100);
         if((r<=intr_percentage)&&(scen_intr_n<MAX_EVENTS)){
-            create_interrupt(ti,rand_range(1,5),0,(rand_range(0,1) ? IO : SYSCALL),scen_intr_n);
+            create_interrupt(ti,rand_range(1,5),0,0,scen_intr_n);
             scen_intr_n++;
         }
         ti++;
@@ -44,7 +44,7 @@ void process_interrupt_check(void){
     }
     printf("\n");
     for(int i=0;i<scen_intr_n;i++){
-        Interrupt intr = scen_intr[i];
+        EVENT intr = scen_intr[i];
         printf("start : %d, dur : %d, target_pid : %d, type : %d\n",intr.start_time,intr.duration,intr.target_pid,intr.type);
     }
 }
