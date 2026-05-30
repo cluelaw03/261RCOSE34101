@@ -16,6 +16,7 @@ void create_interrupt(int start_time, int duration, int target_pid, Interrupt_Ty
     scen_intr[i].duration   = duration;
     scen_intr[i].target_pid = target_pid;
     scen_intr[i].type       = type;
+    scen_intr[i].left_time  = duration;
     return;
 }
 void create_senario(void) {
@@ -29,7 +30,7 @@ void create_senario(void) {
         }
         r = rand_range(1,100);
         if((r<=intr_percentage)&&(scen_intr_n<MAX_EVENTS)){
-            create_interrupt(ti,rand_range(1,5),0,(rand_range(0,1) ? IO_start : SYSCALL_start),scen_intr_n);
+            create_interrupt(ti,rand_range(1,5),0,(rand_range(0,1) ? IO : SYSCALL),scen_intr_n);
             scen_intr_n++;
         }
         ti++;
@@ -44,6 +45,6 @@ void process_interrupt_check(void){
     printf("\n");
     for(int i=0;i<scen_intr_n;i++){
         Interrupt intr = scen_intr[i];
-        printf("start_time : %d, duration : %d, target_pid : %d, type : %d\n",intr.start_time,intr.duration,intr.target_pid,intr.type);
+        printf("start : %d, dur : %d, target_pid : %d, type : %d\n",intr.start_time,intr.duration,intr.target_pid,intr.type);
     }
 }

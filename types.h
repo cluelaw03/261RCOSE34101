@@ -19,8 +19,8 @@ typedef enum{
 } State;
 
 typedef enum{
-    IO_start,IO_end, SYSCALL_start, SYSCALL_end
-} Interrupt_Type;
+    IO, SYSCALL, TIMEOUT
+} EVENT_Type;
 /* ----------------------------------------------------------------- */
 
 /* 구조체 자료형 정의--------------------------------------------------- */
@@ -30,15 +30,16 @@ typedef struct {
     int remaining_cpu;  int executed_cpu;
 
     bool finished;
+    int blocked;
     //evaluation용
     int completion_time; int turnaround_time; int waiting_time;
     int total_blocked_time;
 } Process;
 
 typedef struct{
-    int start_time; int duration;  int target_pid;
-    Interrupt_Type type;
-} Interrupt;
+    int start_time; int duration;  int target_pid; int left_time;
+    EVENT_Type type;
+} EVENT;
 /* ----------------------------------------------------------------- */
 
 #endif /* TYPES_H */
