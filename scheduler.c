@@ -137,8 +137,8 @@ void scheduler_6(Schedule_Type alg){
     is_ready_fifo = (alg == RR);
     if (is_ready_fifo) q_init(&ready_fifo);
     else               pq_init(&ready_q, pick_func);
+    q_init(&wait_q);
 
-    pq_init(&wait_q, cmp_fcfs);         /* Waiting Queue 는 FCFS 로 관리 */
     int running = -1; int intr_running=-1;
     int proc_counted=0; int intr_counted=0;
     int proc_time = -1; int intr_time = -1;

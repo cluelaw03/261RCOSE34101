@@ -26,9 +26,8 @@ void reset_test(void){
         test_intr[i] = scen_intr[i];
     }
 
-    pq_init(&ready_q, NULL);  /* ready_q 는 각 스케줄러가 pq_init 으로 비교함수와 함께 초기화 */    
-    q_init(&ready_fifo);     /* ready_fifo 는 RR 알고리즘에서만 사용 */
-    q_init(&wait_q);   /* 대기 큐 초기화 (ready_q 는 각 스케줄러가 pq_init 으로 비교함수와 함께 초기화) */
+    gantt_n = 0;
+    isblocked=false;
 }
 
 /* ---------------- 큐 보조 함수 ---------------- */
