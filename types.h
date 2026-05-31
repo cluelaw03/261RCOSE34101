@@ -24,6 +24,10 @@ typedef enum{
 } State;
 
 typedef enum{
+    CPU_Bound, Normal, IO_Bound
+}Process_type;
+
+typedef enum{
     IO, SYSCALL, TIMEOUT
 } EVENT_Type;
 /* ----------------------------------------------------------------- */
@@ -32,16 +36,18 @@ typedef enum{
 typedef struct {
     int pid;    int arrival_time;   int cpu_burst;  int priority;
     State state;
+    Process_type type;
     int remaining_cpu;  int executed_cpu; int total_blocked_time;
 
     bool finished;
     int blocked;
     //evaluation용
-    int completion_time; int turnaround_time; int waiting_time;
+    int completion_time; int turnaround_time; int waiting_time; int IO_burst_time;
+    EVENT* events; int event_n;
 } Process;
 
 typedef struct{
-    int start_time; int duration;  int target_pid; int left_time;
+    int start_time;  int target_pid; int duration; 
     EVENT_Type type;
 } EVENT;
 /* ----------------------------------------------------------------- */

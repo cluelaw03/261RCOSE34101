@@ -1,8 +1,11 @@
 #ifndef UTILS_H
 #define UTILS_H
 
+static inline int imax(int a, int b){ return a > b ? a : b; }
+
 int rand_range(int lo, int hi);
 void reset_test(void);
+
 
 /* 큐 보조 함수 */
 void enqueue_ready(int idx);
