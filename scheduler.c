@@ -180,22 +180,22 @@ void simulate_6(Schedule_Type alg){
                         enqueue_ready(running);
                         running=dequeue_ready();
                         scen_proc[running].state = RUNNING;
-                        time_quantum=TIME_QUANTUM;
+                        time_quantum = (alg==RR) ? TIME_QUANTUM : MAX_TIME;
                     }
                 }
-                else if(time_quantum<=0){ //RR만 진입 가능
+                else if(alg==RR && time_quantum<=0){ //RR만 진입 가능
                     EVENT timeout_event = create_TIMEOUT(&scen_proc[running]);
                     apply_interrupts(&timeout_event, &running);
                     running=dequeue_ready();
                     scen_proc[running].state = RUNNING;
-                    time_quantum=TIME_QUANTUM;
+                    time_quantum = (alg==RR) ? TIME_QUANTUM : MAX_TIME;
                 }
             }
             else{
                 if(q_peek(&wait_q)==-1){//대기큐에 프로세스 없으므로, block상태아님.
                     running=dequeue_ready(); //선점형이든 비선점형이든 레디큐에서 프로세스 꺼내서 실행
                     scen_proc[running].state = RUNNING;
-                    time_quantum=TIME_QUANTUM;
+                    time_quantum = (alg==RR) ? TIME_QUANTUM : MAX_TIME;
                 }
                 //else{ IO 진행 } block상태
             }
