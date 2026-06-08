@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include "scenario.h"
 #include "globals.h"
 #include "utils.h"

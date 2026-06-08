@@ -1,3 +1,4 @@
+#include <stddef.h>
 #include "scheduler.h"
 #include "globals.h"
 #include "utils.h"
@@ -144,8 +145,10 @@ void simulate_6(Schedule_Type alg){
     pq_init(&ready_q, pick_func);     /* RR/FCFS여도 cmp는 항상 유효(cmp_fcfs)하니 init 안전 */
     q_init(&wait_q);
 
-    int running = -1;  int blocked_idx = -1;
-    int proc_counted=0; int proc_time = -1;
+    int running = -1;  
+    int blocked_idx = -1;
+    int proc_counted=0; 
+    int proc_time = -1;
 
     if(scen_proc_n>0) proc_time = scen_proc[0].arrival_time;
 
@@ -175,7 +178,7 @@ void simulate_6(Schedule_Type alg){
                     int candidate = pq_peek(&ready_q); //선점형은 무조건 우선순위큐로 레디큐사용
                     if(pick_func(candidate, running)<0){ //새로 도착한 프로세스가 실행중인 프로세스보다 우선순위가 높으면 선점 발생
                         enqueue_ready(running);
-                        running=dequeue_ready(&ready_q);
+                        running=dequeue_ready();
                         scen_proc[running].state = RUNNING;
                         time_quantum=TIME_QUANTUM;
                     }
@@ -216,7 +219,7 @@ void simulate_6(Schedule_Type alg){
                 apply_interrupts(&p->events[p->event_idx], &running);
 
                 Process* bp = &scen_proc[blocked_idx];
-                tick_interrupt(&scen_proc[peek].events[scen_proc[peek].event_idx], &is_interrupt);
+                tick_interrupt(&bp->events[bp->event_idx], &is_interrupt);
                 if(!is_interrupt) blocked_idx = -1;         // IO 끝나면 비움, io가 1짜리인경우
             }
             else{
