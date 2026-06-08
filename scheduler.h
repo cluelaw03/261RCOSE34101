@@ -5,14 +5,13 @@
 int cmp_fcfs(int a, int b);
 int cmp_remaining(int a, int b);
 int cmp_priority(int a, int b);
-void scheduler_6(Schedule_Type algo);
+void simulate_6(Schedule_Type algo);
 
-/* 원본에서 schedule_fcfs 가 호출하는 미구현 함수들 */
-void tick_run(int *running, int *time_quantum);
-void advance_interrupts(void);
+
+void tick_run(int running, int* time_quantum);
+void tick_interrupt(EVENT* event, bool* is_interrupt);
 void check_terminate(int *running, int t, int * time_quantum);
 void finalize_stats(Schedule_Type alg);
-void apply_interrupts(EVENT event, int *running);
-//void advance_interrupts(void);
+void apply_interrupts(EVENT* event, int* ran);
 
 #endif /* SCHEDULER_H */

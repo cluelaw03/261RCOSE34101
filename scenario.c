@@ -24,11 +24,23 @@ void create_one_process(int arrival_time, int priority, int i){
         scen_proc[i].cpu_burst    = rand_range(5, 15);
     }
 
-    create_interrupts(&scen_proc[i]);
+    create_IOs(&scen_proc[i]);
 
     return;
 }
-void create_interrupt(Process* proc){
+EVENT create_TIMEOUT(Process* proc){
+    EVENT timeout_event;
+    timeout_event.type=TIMEOUT;
+    timeout_event.target_pid=proc->pid;
+    timeout_event.duration=0;
+    timeout_event.left_time=0;
+    timeout_event.finished=false;
+
+    return timeout_event;
+}
+
+
+void create_IO(Process* proc){
     if(proc->event_n<=0){
         proc->events=NULL;
         return;
@@ -62,7 +74,7 @@ void create_interrupt(Process* proc){
         proc->events[i].type       = IO;
     }
 }
-void create_interrupts(Process* proc){
+void create_IOs(Process* proc){
     int n= proc->cpu_burst;
     int rand;
     switch (proc->type){
@@ -90,7 +102,7 @@ void create_interrupts(Process* proc){
         proc->event_n = 1;
 
     /* 4. 이벤트 배치 */
-    create_interrupt(proc);
+    create_IO(proc);
 }
 void create_senario(void) {
     int ti=0;
