@@ -197,16 +197,10 @@ void simulate_6(Schedule_Type alg){
                     scen_proc[running].state = RUNNING;
                     time_quantum=TIME_QUANTUM;
                 }
-                else{
-                    continue;
-                    //인터럽트가 진행중이면 대기큐에 무조건 프로세스가 있는 구조니까, 인터럽트 진행중인거다.
-                }
+                //else{ IO 진행 } block상태
             }
         }
-        else{
-            continue;
-            //레디큐에 프로세스가 없음. 여기서 할거는 없음. 나머지는 tick_run이랑 check_terminate에서 처리.
-        }
+        //else{레디큐에 프로세스가 없음. 여기서 할거는 없음. 나머지는 tick_run이랑 check_terminate에서 처리.}
 
         if(running>=0){ //프로세스
             Process* p = &scen_proc[running];

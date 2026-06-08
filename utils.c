@@ -19,7 +19,6 @@ void reset_test(void){
         scen_proc[i].turnaround_time    = 0;
         scen_proc[i].waiting_time       = 0;
         scen_proc[i].IO_burst_time       = 0;
-        scen_proc[i].event_n=0;
         scen_proc[i].event_idx         = (scen_proc[i].event_n > 0) ? 0 : -1;
         for(int j=0; j<scen_proc[i].event_n; j++){
             scen_proc[i].events[j].left_time = scen_proc[i].events[j].duration;
