@@ -32,6 +32,12 @@ typedef enum{
 } EVENT_Type;
 /* ----------------------------------------------------------------- */
 
+typedef struct{
+    int start_time;  int target_pid; int duration; 
+    int left_time; bool finished;
+    EVENT_Type type;
+} EVENT;
+
 /* 구조체 자료형 정의--------------------------------------------------- */
 typedef struct {
     int pid;    int arrival_time;   int cpu_burst;  int priority;
@@ -45,12 +51,6 @@ typedef struct {
     int completion_time; int turnaround_time; int waiting_time; int IO_burst_time;
     EVENT* events; int event_n; int event_idx;
 } Process;
-
-typedef struct{
-    int start_time;  int target_pid; int duration; 
-    int left_time; bool finished;
-    EVENT_Type type;
-} EVENT;
 /* ----------------------------------------------------------------- */
 
 #endif /* TYPES_H */

@@ -6,6 +6,7 @@ static inline int imax(int a, int b){ return a > b ? a : b; }
 int rand_range(int lo, int hi);
 void reset_test(void);
 
+int ready_empty(void);
 
 /* 큐 보조 함수 */
 void enqueue_ready(int idx);

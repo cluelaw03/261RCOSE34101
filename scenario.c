@@ -53,7 +53,7 @@ void create_IO(Process* proc){
         return;
     }
 
-    proc->events = (Event *)malloc(sizeof(Event) * proc->event_n);
+    proc->events = (EVENT *)malloc(sizeof(EVENT) * proc->event_n);
     if (!proc->events) {
         proc->event_n = 0;
         return;
@@ -106,7 +106,7 @@ void create_IOs(Process* proc){
 }
 void create_senario(void) {
     int ti=0;
-    scen_proc_n=0; scen_intr_n=0;
+    scen_proc_n=0;
     while(ti<MAX_TIME){
         int r = rand_range(1,100);
         if((r<=proc_percentage)&&(scen_proc_n<MAX_PROCESS)){

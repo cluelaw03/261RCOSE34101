@@ -29,7 +29,7 @@ void tick_run(int running, int* time_quantum){
 void tick_interrupt(EVENT* event, bool* is_interrupt){
     int target=event->target_pid;
     event->left_time--;
-    scen_proc[target].waiting_time++;
+    scen_proc[target].total_blocked_time++;
     scen_proc[target].IO_burst_time++;
 
     if(event->left_time==0){
@@ -70,8 +70,8 @@ void apply_interrupts(EVENT* event,int* ran){
 }
 
 void check_terminate(int *running, int t, int * time_quantum) {
-    Process* now_process=&scen_proc[*running];
     if ((*running) < 0) return;
+    Process* now_process=&scen_proc[*running];
     if (now_process->remaining_cpu == 0) {
         now_process->state           = TERMINATED;
         now_process->finished        = 1;
@@ -87,7 +87,7 @@ void check_terminate(int *running, int t, int * time_quantum) {
 void finalize_stats(Schedule_Type algo) {
     double total_wait = 0, total_turn = 0;
     int    done = 0;
-    for (int i = 0; i < proc_n; i++) {
+    for (int i = 0; i < scen_proc_n; i++) {
         if (scen_proc[i].finished) {
             total_wait += scen_proc[i].waiting_time;
             total_turn += scen_proc[i].turnaround_time;
@@ -95,7 +95,7 @@ void finalize_stats(Schedule_Type algo) {
         }
     }
     result_done[algo]  = done;
-    result_total[algo] = proc_n;
+    result_total[algo] = scen_proc_n;
     result_wait[algo]  = done ? total_wait / done : 0.0;
     result_turn[algo]  = done ? total_turn / done : 0.0;
 }
@@ -140,30 +140,16 @@ void simulate_6(Schedule_Type alg){
 
     //RR은 우선순위 큐를 사용하면 선입선출에 큰 오류 가능
     is_ready_fifo = ((alg == RR)||(alg == FCFS));
-    if (is_ready_fifo) q_init(&ready_fifo);
-    else               pq_init(&ready_q, pick_func);
+    q_init(&ready_fifo);              /* 둘 다 초기화하면 직전 실행 잔여 size가 안 남음 */
+    pq_init(&ready_q, pick_func);     /* RR/FCFS여도 cmp는 항상 유효(cmp_fcfs)하니 init 안전 */
     q_init(&wait_q);
 
-    int running = -1;
+    int running = -1;  int blocked_idx = -1;
     int proc_counted=0; int proc_time = -1;
 
-    if(proc_n>0) proc_time = scen_proc[0].arrival_time;
+    if(scen_proc_n>0) proc_time = scen_proc[0].arrival_time;
 
     for (int t = 0; t < MAX_TIME; t++) {
-        /*while(1)으로 감싸진 프로세스 발생처리
-            * 프로세스가 동시에 도착할 수 있으므로 while문으로 처리
-            * 선점형 알고리즘인 경우, 새로 도착한 프로세스가 실행중인 프로세스보다 우선순위가 높으면 선점 발생
-            * 타임 퀀텀 체크, 타임 퀀텀이 다 된 경우 TIMEOUT 인터럽트 발생
-            * non-preemptive: 실행중인 프로세스 없을 때만 레디큐에서 프로세스 선택
-            * preemptive: 레디큐에 프로세스 있으면 매 틱마다 레디큐에서 가장 우선순위 높은 프로세스 선택
-            * 실행중인 프로세스 1 tick 실행
-            * 실행중인 프로세스 종료 체크 및 종료 처리*/
-         스케줄링처리
-            * 타임 퀀텀이 다 되면 TIMEOUT 인터럽트 발생 및 인터럽트 처리 + time_quantum 초기화
-            >> RR한정 유의미. 나머지는 time_quantum이 MAX_TIME으로 초기화되어서 타임 퀀텀 체크는 항상 false
-
-
-        */
 
         //프로세스 발생처리
         while(1){
@@ -174,26 +160,29 @@ void simulate_6(Schedule_Type alg){
                 proc_counted++;
 
                 //다음프로세스 시간설정 프로세스의 마지막에 도달한다면 proc_time=-1
-                if(proc_n>proc_counted) proc_time = scen_proc[proc_counted].arrival_time;
-                else proc_time=-1;
+                if(scen_proc_n>proc_counted) proc_time = scen_proc[proc_counted].arrival_time;
+                else {proc_time=-1; break;}
+            }
+            else{
+                break;
             }
         }
         
         //스케줄링처리
-        if(ready_fifo.size>0||ready_q.size>0){//레디큐에 건덕지 있음
+        if(!ready_empty()){ //레디큐에 건덕지 있음
             if(running>=0){
                 if(is_preemptive==true){ //선점형만 진입 가능
                     int candidate = pq_peek(&ready_q); //선점형은 무조건 우선순위큐로 레디큐사용
                     if(pick_func(candidate, running)<0){ //새로 도착한 프로세스가 실행중인 프로세스보다 우선순위가 높으면 선점 발생
                         enqueue_ready(running);
-                        running=deq(&ready_q);
+                        running=dequeue_ready(&ready_q);
                         scen_proc[running].state = RUNNING;
                         time_quantum=TIME_QUANTUM;
                     }
                 }
                 else if(time_quantum<=0){ //RR만 진입 가능
                     EVENT timeout_event = create_TIMEOUT(&scen_proc[running]);
-                    apply_interrupts(&timeout_event);
+                    apply_interrupts(&timeout_event, &running);
                     running=dequeue_ready();
                     scen_proc[running].state = RUNNING;
                     time_quantum=TIME_QUANTUM;
@@ -217,11 +206,18 @@ void simulate_6(Schedule_Type alg){
         }
 
         if(running>=0){ //프로세스
-            if(scen_proc[running].executed_cpu==scen_proc[running].events[scen_proc[running].event_idx].start_time){
+            Process* p = &scen_proc[running];
+            bool has_event = (p->event_idx >= 0 && p->events != NULL);
+
+            if(has_event && p->executed_cpu == p->events[p->event_idx].start_time){
                 is_interrupt=true;
-                scen_proc[running].events[scen_proc[running].event_idx].target_pid=running;
-                apply_interrupts(&scen_proc[running].events[scen_proc[running].event_idx],&running);
-                tick_interrupt(&scen_proc[running].events[scen_proc[running].event_idx], &is_interrupt);
+                p->events[p->event_idx].target_pid = running;
+                blocked_idx = running;
+                apply_interrupts(&p->events[p->event_idx], &running);
+
+                Process* bp = &scen_proc[blocked_idx];
+                tick_interrupt(&scen_proc[peek].events[scen_proc[peek].event_idx], &is_interrupt);
+                if(!is_interrupt) blocked_idx = -1;         // IO 끝나면 비움, io가 1짜리인경우
             }
             else{
                 tick_run(running, &time_quantum);
@@ -229,7 +225,9 @@ void simulate_6(Schedule_Type alg){
         }
         else{
             if(is_interrupt){
-                tick_interrupt(&scen_proc[running].events[scen_proc[running].event_idx], &is_interrupt);
+                Process* bp = &scen_proc[blocked_idx];
+                tick_interrupt(&bp->events[bp->event_idx], &is_interrupt);
+                if(!is_interrupt) blocked_idx = -1;          // IO 끝나면 비움 
             }
             else{
                 continue; //놀고있는상태
