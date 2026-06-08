@@ -211,28 +211,35 @@ void simulate_6(Schedule_Type alg){
                 p->events[p->event_idx].target_pid = running;
                 blocked_idx = running;
                 apply_interrupts(&p->events[p->event_idx], &running);
-
-                Process* bp = &scen_proc[blocked_idx];
+                
+                int io_idx = blocked_idx;                 // 이 틱은 io_idx 의 IO
+                Process* bp = &scen_proc[io_idx];
                 tick_interrupt(&bp->events[bp->event_idx], &is_interrupt);
                 if(!is_interrupt) blocked_idx = -1;         // IO 끝나면 비움, io가 1짜리인경우
+                if(gantt_n < MAX_GANTT) gantt_pid[gantt_n++] = -(io_idx + 2); //간트기록
             }
             else{
                 tick_run(running, &time_quantum);
+                if(gantt_n < MAX_GANTT) gantt_pid[gantt_n++] = running;   //간트기록
             }
         }
         else{
             if(is_interrupt){
-                Process* bp = &scen_proc[blocked_idx];
+                int io_idx = blocked_idx;
+                Process* bp = &scen_proc[io_idx];
                 tick_interrupt(&bp->events[bp->event_idx], &is_interrupt);
                 if(!is_interrupt) blocked_idx = -1;          // IO 끝나면 비움 
+                if(gantt_n < MAX_GANTT) gantt_pid[gantt_n++] = -(io_idx + 2);
             }
             else{
-                continue; //놀고있는상태
+                if(gantt_n < MAX_GANTT) gantt_pid[gantt_n++] = -1;               // idle 셀
+                continue;
             }
         }
 
 
         check_terminate(&running, t, &time_quantum); //실행중인 프로세스 종료 체크 및 running -1
     }
+    while(gantt_n > 0 && gantt_pid[gantt_n - 1] == -1) gantt_n--;  // 후행 idle 제거
     finalize_stats(alg);         //결과 계산 및 저장 
 }

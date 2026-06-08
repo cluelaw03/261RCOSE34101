@@ -2,26 +2,30 @@
 #include <stdio.h>
 
 void print_gantt(void) {
-    int starts[MAX_GANTT], pids[MAX_GANTT], seg = 0;
+    int starts[MAX_GANTT], cells[MAX_GANTT], seg = 0;
     int i = 0;
-    while (i < gantt_n) {
+    while (i < gantt_n) {                       /* 연속 동일 셀을 구간으로 묶음 */
         int j = i;
         while (j < gantt_n && gantt_pid[j] == gantt_pid[i]) j++;
         starts[seg] = i;
-        pids[seg]   = gantt_pid[i];
+        cells[seg]  = gantt_pid[i];
         seg++;
         i = j;
     }
+
     printf("\n[Gantt Chart] (cells of length 1)\n");
     for (int s = 0; s < seg; s++) {
-        char buf[12];
-        if (pids[s] == -1) snprintf(buf, sizeof(buf), "idle");
-        else               snprintf(buf, sizeof(buf), "P%d", pids[s]);
-        int len = (int)(starts[s+1 < seg ? s+1 : s] - starts[s]);
-        if (s == seg - 1) len = gantt_n - starts[s];
+        char buf[16];
+        int c = cells[s];
+        if (c == -1)       snprintf(buf, sizeof(buf), "idle");            /* 유휴 */
+        else if (c <= -2)  snprintf(buf, sizeof(buf), "P%d-IO", -c - 2);  /* IO 진행 */
+        else               snprintf(buf, sizeof(buf), "P%d", c);          /* CPU 실행 */
+
+        int len = ((s + 1 < seg) ? starts[s + 1] : gantt_n) - starts[s];
         printf("| %s(%d) ", buf, len);
     }
     printf("|\n");
+
     printf("Timeline: ");
     for (int s = 0; s < seg; s++) printf("%d ", starts[s]);
     printf("%d\n", gantt_n);
