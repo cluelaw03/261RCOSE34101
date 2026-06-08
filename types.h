@@ -43,11 +43,12 @@ typedef struct {
     int blocked;
     //evaluation용
     int completion_time; int turnaround_time; int waiting_time; int IO_burst_time;
-    EVENT* events; int event_n;
+    EVENT* events; int event_n; int event_idx;
 } Process;
 
 typedef struct{
     int start_time;  int target_pid; int duration; 
+    int left_time; bool finished;
     EVENT_Type type;
 } EVENT;
 /* ----------------------------------------------------------------- */

@@ -7,23 +7,23 @@
 int rand_range(int lo, int hi) { return lo + rand() % (hi - lo + 1); }
 
 void reset_test(void){ 
-    proc_n = scen_proc_n;
-    intr_n = scen_intr_n;
-
     for (int i = 0; i < proc_n; i++) {
-        test_proc[i] = scen_proc[i];
-        test_proc[i].remaining_cpu      = test_proc[i].cpu_burst;
-        test_proc[i].executed_cpu       = 0;
-        test_proc[i].state              = NEW;
-        test_proc[i].finished           = false;
-        test_proc[i].blocked          = false;
-        test_proc[i].completion_time    = 0;
-        test_proc[i].turnaround_time    = 0;
-        test_proc[i].waiting_time       = 0;
-        test_proc[i].total_blocked_time = 0;
-    }
-    for (int i = 0; i < intr_n; i++) {
-        test_intr[i] = scen_intr[i];
+        scen_proc[i].state = NEW;
+        scen_proc[i].remaining_cpu      = scen_proc[i].cpu_burst;
+        scen_proc[i].executed_cpu       = 0;
+        scen_proc[i].total_blocked_time = 0;
+        scen_proc[i].finished           = false;
+        scen_proc[i].blocked            = false;
+
+        scen_proc[i].completion_time    = 0;
+        scen_proc[i].turnaround_time    = 0;
+        scen_proc[i].waiting_time       = 0;
+        scen_proc[i].IO_burst_time       = 0;
+        scen_proc[i].event_idx         = (scen_proc[i].event_n > 0) ? 0 : -1;
+        for(int j=0; j<scen_proc[i].event_n; j++){
+            scen_proc[i].events[j].left_time = scen_proc[i].events[j].duration;
+            scen_proc[i].events[j].finished = false;
+        }
     }
 
     gantt_n = 0;
