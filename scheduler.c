@@ -244,6 +244,9 @@ void simulate_6(Schedule_Type alg){
     finalize_stats(alg);         //결과 계산 및 저장 
 }
 
+
+//큐안에 들어있는동안 우선순위 변동으로 내부 변동 반영해야해서 기존의 pq사용불가
+//priority를 기준으로 뽑되, 같을경우 pid가 낮은것(먼저 발생했던 프로세스)고르기
 static int pick_ready_aging(void){
     int best = -1;
     for(int i=0;i<scen_proc_n;i++){
@@ -259,23 +262,25 @@ static int pick_ready_aging(void){
 
 void simulate_with_aging_priority(void){
     reset_test();
-    for(int i=0;i<scen_proc_n;i++){
+    for(int i=0;i<scen_proc_n;i++){//reset_test에서 못한 초기화 마저하기==> 기존과의 차이점
         scen_proc[i].cur_priority = scen_proc[i].priority;
         scen_proc[i].age = 0;
     }
+    //초기 지역변수 파라미터 설정
     int running = -1, blocked_idx = -1;
     bool is_interrupt = false;
     int proc_counted = 0;
     int proc_time = (scen_proc_n > 0) ? scen_proc[0].arrival_time : -1;
 
+
     for(int t = 0; t < MAX_TIME; t++){
-        while(proc_time == t){
+        while(proc_time == t){//기존이랑 동일
             scen_proc[proc_counted].pid = proc_counted;
             scen_proc[proc_counted].state = READY;
             proc_counted++;
-            proc_time = (proc_counted < scen_proc_n) ? scen_proc[proc_counted].arrival_time : -1;
+            proc_time = (proc_counted < scen_proc_n) ? scen_proc[proc_counted].arrival_time : -1; 
         }
-        for(int i = 0; i < scen_proc_n; i++){
+        for(int i = 0; i < scen_proc_n; i++){ //레디큐에서 기다리고 있을 프로세스에 에이징처리용 파라미터 업데이트 및 일정이상 파라미터 되면 우선순위 높이기
             if(scen_proc[i].state == READY && i != running){
                 scen_proc[i].age++;
                 if(scen_proc[i].age >= AGING_INTERVAL){
@@ -284,8 +289,10 @@ void simulate_with_aging_priority(void){
                 }
             }
         }
+
+        //스케줄링처리
         if(!is_interrupt){
-            int best = pick_ready_aging();
+            int best = pick_ready_aging(); 
             if(running < 0){
                 if(best >= 0){ running = best; scen_proc[running].state = RUNNING; scen_proc[running].age = 0; }
             } else if(best >= 0 && best != running
@@ -294,10 +301,12 @@ void simulate_with_aging_priority(void){
                 running = best; scen_proc[running].state = RUNNING; scen_proc[running].age = 0;
             }
         }
+
+
         if(running >= 0){
             Process* p = &scen_proc[running];
             bool has_event = (p->event_idx >= 0 && p->events != NULL);
-            if(has_event && p->executed_cpu == p->events[p->event_idx].start_time){
+            if(has_event && p->executed_cpu == p->events[p->event_idx].start_time){ //인터럽트 발생
                 p->state = WAITING; blocked_idx = running; running = -1; is_interrupt = true;
                 EVENT* ev = &p->events[p->event_idx];
                 ev->left_time--; p->total_blocked_time++; p->IO_burst_time++;
@@ -306,12 +315,12 @@ void simulate_with_aging_priority(void){
                     p->state = READY; is_interrupt = false; blocked_idx = -1;
                 }
                 if(gantt_n < MAX_GANTT) gantt_pid[gantt_n++] = -(p->pid + 2);
-            } else {
+            } else { //정상작동
                 int tq = MAX_TIME; tick_run(running, &tq);
                 if(gantt_n < MAX_GANTT) gantt_pid[gantt_n++] = running;
             }
-        } else {
-            if(is_interrupt){
+        } else { 
+            if(is_interrupt){//인터럽트 처리중
                 Process* bp = &scen_proc[blocked_idx];
                 EVENT* ev = &bp->events[bp->event_idx];
                 ev->left_time--; bp->total_blocked_time++; bp->IO_burst_time++;
@@ -320,7 +329,7 @@ void simulate_with_aging_priority(void){
                     bp->event_idx++; if(bp->event_idx == bp->event_n) bp->event_idx = -1;
                     bp->state = READY; is_interrupt = false; blocked_idx = -1;
                 }
-            } else {
+            } else {//노는상태
                 if(gantt_n < MAX_GANTT) gantt_pid[gantt_n++] = -1;
                 continue;
             }

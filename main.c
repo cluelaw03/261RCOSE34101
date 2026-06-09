@@ -11,6 +11,8 @@
 int main(void) {
     srand(time(NULL));
 
+    bool Was_Scheduled[8]={false,};
+
     int inpu=1;
     printf("default진행여부\nNo = 0\nYes = 1\n");
     scanf("%i",&inpu);
@@ -100,6 +102,10 @@ int main(void) {
         scanf("%i",&inpu);
         if(inpu!=1) break;
     }
+    for(int k=0;k<8;k++){
+        if(Was_Scheduled[k]) print_result;
+    }
+
     
     printf("program end\n");
 

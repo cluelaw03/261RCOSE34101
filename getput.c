@@ -4,7 +4,7 @@
 #include <string.h>
 
 #define GW         4    /* 한 틱당 칸 너비 (2자리 pid + 시각 여백) */
-#define GANTT_WRAP 20   /* 한 줄에 표시할 틱(시간) 수 → 줄폭 = GW*WRAP+1 */
+#define GANTT_WRAP 30   /* 한 줄에 표시할 틱(시간) 수 → 줄폭 = GW*WRAP+1 */
 
 /* 셀 라벨: 프로세스=pid, IO='I', idle='.' */
 static void gantt_label(int c, char* buf, int n){
