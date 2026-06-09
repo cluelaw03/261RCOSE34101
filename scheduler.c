@@ -325,7 +325,7 @@ void simulate_with_aging_priority(void){
                 continue;
             }
         }
-        int tq2 = MAX_TIME; check_terminate(&running, t);
+        check_terminate(&running, t);
     }
     while(gantt_n > 0 && gantt_pid[gantt_n - 1] == -1) gantt_n--;
     finalize_stats(AGING);
@@ -384,7 +384,7 @@ void simulate_with_multibound(void){
                 mb_enqueue(i);
             }
         }
-        int prev = running, tqd = TIME_QUANTUM;
+        int prev = running;
         check_terminate(&running, t);
         if(prev >= 0 && running < 0) cur_side ^= 1;
     }
