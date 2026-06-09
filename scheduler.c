@@ -294,7 +294,7 @@ void simulate_with_aging_priority(void){
         if(!is_interrupt){
             int best = pick_ready_aging(); 
             if(running < 0){
-                if(best >= 0){ running = best; scen_proc[running].state = RUNNING; scen_proc[running].age = 0; }
+                if(best >= 0){ running = best; scen_proc[running].state = RUNNING; scen_proc[running].age = 0; }//best가 음수는 큐가 비어있어서 꺼낼거 없음
             } else if(best >= 0 && best != running
                       && scen_proc[best].cur_priority < scen_proc[running].cur_priority){
                 scen_proc[running].state = READY;
@@ -353,26 +353,29 @@ static int mb_dispatch(int pref){
     return got;
 }
 
-void simulate_with_multibound(void){
+void simulate_with_multibound(void){ //비동기식으로 스케줄링 되기떄문에 앞의 예시처럼 인터럽트에 의한 상태와 running을 둘 다 고려할 필요없이 running위주로 고려
     reset_test();
-    q_init(&rq_io); q_init(&rq_cpu);
-    int running = -1, proc_counted = 0;
+    q_init(&rq_io); q_init(&rq_cpu); //2개 레디큐 준비
+    int running = -1, proc_counted = 0;  //기본 파라미터 설정
     int proc_time = (scen_proc_n > 0) ? scen_proc[0].arrival_time : -1;
     int cur_side = 1, time_quantum = TIME_QUANTUM;
 
     for(int t = 0; t < MAX_TIME; t++){
-        while(proc_time == t){
+        while(proc_time == t){ //특이점으로는 enque할때 어디 큐에 넣을지 결정해야함
             scen_proc[proc_counted].pid = proc_counted; mb_enqueue(proc_counted); proc_counted++;
-            proc_time = (proc_counted < scen_proc_n) ? scen_proc[proc_counted].arrival_time : -1;
+            proc_time = (proc_counted < scen_proc_n) ? scen_proc[proc_counted].arrival_time : -1; //프로세스 발생할거 더 없음처리 -1
         }
+    //cpu bound에서 타임 퀀텀 다됨 cpu는 RR이기떄문
         if(running >= 0 && mb_side_of(running) == 1 && time_quantum <= 0){
             q_push(&rq_cpu, running); scen_proc[running].state = READY; running = -1; cur_side ^= 1;
         }
         bool runnable = false;
-        while(!runnable){
+
+        //스케줄링
+        while(!runnable){ //runnable이 참이되면 break=cpu점유중인 프로세스 인터럽트 안일어나고 진행
             if(running < 0){
-                running = mb_dispatch(cur_side);
-                if(running < 0) break;
+                running = mb_dispatch(cur_side); //2개의 큐중 값 뽑기
+                if(running < 0) break; //전부 비면  break
                 scen_proc[running].state = RUNNING; time_quantum = TIME_QUANTUM;
             }
             Process* p = &scen_proc[running];
@@ -381,6 +384,7 @@ void simulate_with_multibound(void){
                 p->state = WAITING; running = -1; cur_side ^= 1;
             } else runnable = true;
         }
+        //cpu작업및 시간 지남 가정
         if(running >= 0) tick_run(running, &time_quantum);
         if(gantt_n < MAX_GANTT) gantt_pid[gantt_n++] = (running >= 0) ? running : -1;
         for(int i = 0; i < scen_proc_n; i++){

@@ -112,8 +112,9 @@ int main(void) {
     }
     for(int k=0;k<8;k++){
             printf("------------------------------------------------------------------------\n");
+            
 
-            printf("\n Completed : %d / %d\n", result_done[k], result_total[k]);
+            printf("%d\n Completed : %d / %d\n",k ,result_done[k], result_total[k]);
             printf(" Avg Waiting    (completed only) : %.2f\n", result_wait[k]);
             printf(" Avg Turnaround (completed only) : %.2f\n", result_turn[k]);
     }
