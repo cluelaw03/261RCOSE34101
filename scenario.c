@@ -79,7 +79,6 @@ void create_IO(Process* proc){
 }
 void create_IOs(Process* proc){
     int n= proc->cpu_burst;
-    int rand;
     switch (proc->type){
         case CPU_Bound:
             proc->event_n = rand_range(0, imax(1, n/20));

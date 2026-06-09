@@ -28,7 +28,7 @@ void print_gantt(void) {
             int run = 1;
             while(t + run < end && gantt_pid[t + run] == c) run++;   /* 연속 구간 묶기 */
 
-            char lab[8]; gantt_label(c, lab, sizeof lab);
+            char lab[16]; gantt_label(c, lab, sizeof lab);
             int width = run * GW - 1;                 /* 이 구간 내부 너비 */
             int L = (int)strlen(lab);
             int padl = (width - L) / 2; if(padl < 0) padl = 0;
@@ -47,7 +47,7 @@ void print_gantt(void) {
             int run = 1;
             while(t + run < end && gantt_pid[t + run] == c) run++;
 
-            char num[8]; snprintf(num, sizeof num, "%d", t);
+            char num[16]; snprintf(num, sizeof num, "%d", t);
             int field = run * GW;                     /* '|' + 내부너비 */
             fputs(num, stdout);
             for(int i = (int)strlen(num); i < field; i++) putchar(' ');

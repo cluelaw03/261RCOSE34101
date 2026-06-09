@@ -56,34 +56,42 @@ int main(void) {
            case 1:{
                 simulate_6(FCFS);
                 print_result(FCFS);
+                break;
             }
             case 2:{
                 simulate_6(SJF_NP);
                 print_result(SJF_NP);
+                break;
             }
             case 3:{
                 simulate_6(SJF_P);
                 print_result(SJF_P);
+                break;
             }
             case 4:{
                 simulate_6(PRIO_NP);
                 print_result(PRIO_NP);
+                break;
             }
             case 5:{
                 simulate_6(PRIO);
                 print_result(PRIO);
+                break;
             }
             case 6:{
                 simulate_6(RR);
                 print_result(RR);
+                break;
             }
             case 7:{
                 simulate_with_aging_priority();
                 print_result(AGING);
+                break;
             }
             case 8:{
                 simulate_with_multibound();
                 print_result(MULTIBOUND);
+                break;
             }
             default:
                 break;

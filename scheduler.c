@@ -70,7 +70,7 @@ void apply_interrupts(EVENT* event,int* ran){
    }
 }
 
-void check_terminate(int *running, int t, int * time_quantum) {
+void check_terminate(int *running, int t) {
     if ((*running) < 0) return;
     Process* now_process=&scen_proc[*running];
     if (now_process->remaining_cpu == 0) {
@@ -238,7 +238,7 @@ void simulate_6(Schedule_Type alg){
         }
 
 
-        check_terminate(&running, t, &time_quantum); //실행중인 프로세스 종료 체크 및 running -1
+        check_terminate(&running, t); //실행중인 프로세스 종료 체크 및 running -1
     }
     while(gantt_n > 0 && gantt_pid[gantt_n - 1] == -1) gantt_n--;  // 후행 idle 제거
     finalize_stats(alg);         //결과 계산 및 저장 
@@ -325,7 +325,7 @@ void simulate_with_aging_priority(void){
                 continue;
             }
         }
-        int tq2 = MAX_TIME; check_terminate(&running, t, &tq2);
+        int tq2 = MAX_TIME; check_terminate(&running, t);
     }
     while(gantt_n > 0 && gantt_pid[gantt_n - 1] == -1) gantt_n--;
     finalize_stats(AGING);
@@ -385,7 +385,7 @@ void simulate_with_multibound(void){
             }
         }
         int prev = running, tqd = TIME_QUANTUM;
-        check_terminate(&running, t, &tqd);
+        check_terminate(&running, t);
         if(prev >= 0 && running < 0) cur_side ^= 1;
     }
     while(gantt_n > 0 && gantt_pid[gantt_n - 1] == -1) gantt_n--;
