@@ -58,41 +58,49 @@ int main(void) {
            case 1:{
                 simulate_6(FCFS);
                 print_result(FCFS);
+                Was_Scheduled[0]=true;
                 break;
             }
             case 2:{
                 simulate_6(SJF_NP);
                 print_result(SJF_NP);
+                Was_Scheduled[1]=true;
                 break;
             }
             case 3:{
                 simulate_6(SJF_P);
                 print_result(SJF_P);
+                Was_Scheduled[2]=true;
                 break;
             }
             case 4:{
                 simulate_6(PRIO_NP);
                 print_result(PRIO_NP);
+                Was_Scheduled[3]=true;
                 break;
             }
             case 5:{
                 simulate_6(PRIO);
                 print_result(PRIO);
+                Was_Scheduled[4]=true;
                 break;
             }
             case 6:{
                 simulate_6(RR);
                 print_result(RR);
+                Was_Scheduled[5]=true;
                 break;
             }
             case 7:{
                 simulate_with_aging_priority();
                 print_result(AGING);
+                Was_Scheduled[6]=true;
                 break;
             }
             case 8:{
                 simulate_with_multibound();
                 print_result(MULTIBOUND);
+                Was_Scheduled[7]=true;
                 break;
             }
             default:
