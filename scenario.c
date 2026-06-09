@@ -14,15 +14,15 @@ void create_one_process(int arrival_time, int priority, int i){
 //10% CPU_Bound, 30% Normal, 60% IO_Bound
     if(rand<=10){
         scen_proc[i].type         = CPU_Bound;
-        scen_proc[i].cpu_burst    = rand_range(8, 18);   // 기존 20,50
+        scen_proc[i].cpu_burst = rand_range(cfg.cpu_burst_min,    cfg.cpu_burst_max);
     }
     else if(rand<=40){
         scen_proc[i].type         = Normal;
-        scen_proc[i].cpu_burst    = rand_range(5, 12);   // 기존 10,30
+        scen_proc[i].cpu_burst = rand_range(cfg.normal_burst_min, cfg.normal_burst_max);
     }
     else{
         scen_proc[i].type         = IO_Bound;
-        scen_proc[i].cpu_burst    = rand_range(5, 9);    // 기존 5,15
+        scen_proc[i].cpu_burst = rand_range(cfg.io_burst_min,     cfg.io_burst_max);
     }
 
     create_IOs(&scen_proc[i]);

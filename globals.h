@@ -34,4 +34,6 @@ extern int         gantt_n;
 
 extern char *schedule_name[ALG_N];
 
+extern SimConfig cfg;
+
 #endif /* GLOBALS_H */

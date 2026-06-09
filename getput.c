@@ -34,7 +34,7 @@ void print_gantt(void) {
 void print_result(Schedule_Type algo) {
     printf("\n============================================================\n");
     printf(" Algorithm : %s", schedule_name[algo]);
-    if (algo == RR) printf("  (Time Quantum = %d)", TIME_QUANTUM);
+    if (algo == RR) printf("  (Time Quantum = %d)", cfg.time_quantum);
     printf("\n============================================================\n");
 
     print_gantt();

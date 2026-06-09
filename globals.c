@@ -34,3 +34,10 @@ char *schedule_name[ALG_N] = {
     "Non-Preemptive Priority", "Preemptive Priority", "Round Robin",
     "Priority + Aging", "Multilevel (IO:FCFS / CPU:RR)"
 };
+
+SimConfig cfg = {//기본값 설정
+    .cpu_burst_min    = 8,  .cpu_burst_max    = 18,
+    .normal_burst_min = 5,  .normal_burst_max = 12,
+    .io_burst_min     = 5,  .io_burst_max     = 9,
+    .time_quantum     = TIME_QUANTUM
+};
