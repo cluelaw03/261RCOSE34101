@@ -243,3 +243,151 @@ void simulate_6(Schedule_Type alg){
     while(gantt_n > 0 && gantt_pid[gantt_n - 1] == -1) gantt_n--;  // 후행 idle 제거
     finalize_stats(alg);         //결과 계산 및 저장 
 }
+
+static int pick_ready_aging(void){
+    int best = -1;
+    for(int i=0;i<scen_proc_n;i++){
+        if(scen_proc[i].state != READY) continue;
+        if(best < 0
+           || scen_proc[i].cur_priority <  scen_proc[best].cur_priority
+           || (scen_proc[i].cur_priority == scen_proc[best].cur_priority
+               && scen_proc[i].pid < scen_proc[best].pid))
+            best = i;
+    }
+    return best;
+}
+
+void simulate_with_aging_priority(void){
+    reset_test();
+    for(int i=0;i<scen_proc_n;i++){
+        scen_proc[i].cur_priority = scen_proc[i].priority;
+        scen_proc[i].age = 0;
+    }
+    int running = -1, blocked_idx = -1;
+    bool is_interrupt = false;
+    int proc_counted = 0;
+    int proc_time = (scen_proc_n > 0) ? scen_proc[0].arrival_time : -1;
+
+    for(int t = 0; t < MAX_TIME; t++){
+        while(proc_time == t){
+            scen_proc[proc_counted].pid = proc_counted;
+            scen_proc[proc_counted].state = READY;
+            proc_counted++;
+            proc_time = (proc_counted < scen_proc_n) ? scen_proc[proc_counted].arrival_time : -1;
+        }
+        for(int i = 0; i < scen_proc_n; i++){
+            if(scen_proc[i].state == READY && i != running){
+                scen_proc[i].age++;
+                if(scen_proc[i].age >= AGING_INTERVAL){
+                    scen_proc[i].age = 0;
+                    if(scen_proc[i].cur_priority > PRIO_MIN) scen_proc[i].cur_priority--;
+                }
+            }
+        }
+        if(!is_interrupt){
+            int best = pick_ready_aging();
+            if(running < 0){
+                if(best >= 0){ running = best; scen_proc[running].state = RUNNING; scen_proc[running].age = 0; }
+            } else if(best >= 0 && best != running
+                      && scen_proc[best].cur_priority < scen_proc[running].cur_priority){
+                scen_proc[running].state = READY;
+                running = best; scen_proc[running].state = RUNNING; scen_proc[running].age = 0;
+            }
+        }
+        if(running >= 0){
+            Process* p = &scen_proc[running];
+            bool has_event = (p->event_idx >= 0 && p->events != NULL);
+            if(has_event && p->executed_cpu == p->events[p->event_idx].start_time){
+                p->state = WAITING; blocked_idx = running; running = -1; is_interrupt = true;
+                EVENT* ev = &p->events[p->event_idx];
+                ev->left_time--; p->total_blocked_time++; p->IO_burst_time++;
+                if(ev->left_time == 0){
+                    p->event_idx++; if(p->event_idx == p->event_n) p->event_idx = -1;
+                    p->state = READY; is_interrupt = false; blocked_idx = -1;
+                }
+                if(gantt_n < MAX_GANTT) gantt_pid[gantt_n++] = -(p->pid + 2);
+            } else {
+                int tq = MAX_TIME; tick_run(running, &tq);
+                if(gantt_n < MAX_GANTT) gantt_pid[gantt_n++] = running;
+            }
+        } else {
+            if(is_interrupt){
+                Process* bp = &scen_proc[blocked_idx];
+                EVENT* ev = &bp->events[bp->event_idx];
+                ev->left_time--; bp->total_blocked_time++; bp->IO_burst_time++;
+                if(gantt_n < MAX_GANTT) gantt_pid[gantt_n++] = -(bp->pid + 2);
+                if(ev->left_time == 0){
+                    bp->event_idx++; if(bp->event_idx == bp->event_n) bp->event_idx = -1;
+                    bp->state = READY; is_interrupt = false; blocked_idx = -1;
+                }
+            } else {
+                if(gantt_n < MAX_GANTT) gantt_pid[gantt_n++] = -1;
+                continue;
+            }
+        }
+        int tq2 = MAX_TIME; check_terminate(&running, t, &tq2);
+    }
+    while(gantt_n > 0 && gantt_pid[gantt_n - 1] == -1) gantt_n--;
+    finalize_stats(AGING);
+}
+
+/* === 추가기능 2) Multibound 멀티레벨 큐 === */
+static int mb_side_of(int idx){ return (scen_proc[idx].type == IO_Bound) ? 0 : 1; }  /* Normal은 CPU큐로 가정 */
+static void mb_enqueue(int idx){
+    if(mb_side_of(idx) == 0) q_push(&rq_io, idx); else q_push(&rq_cpu, idx);
+    scen_proc[idx].state = READY;
+}
+static int mb_dispatch(int pref){
+    int got;
+    if(pref == 0){ got = q_pop(&rq_io);  if(got < 0) got = q_pop(&rq_cpu); }
+    else         { got = q_pop(&rq_cpu); if(got < 0) got = q_pop(&rq_io);  }
+    return got;
+}
+
+void simulate_with_multibound(void){
+    reset_test();
+    q_init(&rq_io); q_init(&rq_cpu);
+    int running = -1, proc_counted = 0;
+    int proc_time = (scen_proc_n > 0) ? scen_proc[0].arrival_time : -1;
+    int cur_side = 1, time_quantum = TIME_QUANTUM;
+
+    for(int t = 0; t < MAX_TIME; t++){
+        while(proc_time == t){
+            scen_proc[proc_counted].pid = proc_counted; mb_enqueue(proc_counted); proc_counted++;
+            proc_time = (proc_counted < scen_proc_n) ? scen_proc[proc_counted].arrival_time : -1;
+        }
+        if(running >= 0 && mb_side_of(running) == 1 && time_quantum <= 0){
+            q_push(&rq_cpu, running); scen_proc[running].state = READY; running = -1; cur_side ^= 1;
+        }
+        bool runnable = false;
+        while(!runnable){
+            if(running < 0){
+                running = mb_dispatch(cur_side);
+                if(running < 0) break;
+                scen_proc[running].state = RUNNING; time_quantum = TIME_QUANTUM;
+            }
+            Process* p = &scen_proc[running];
+            bool has_event = (p->event_idx >= 0 && p->events != NULL);
+            if(has_event && p->executed_cpu == p->events[p->event_idx].start_time){
+                p->state = WAITING; running = -1; cur_side ^= 1;
+            } else runnable = true;
+        }
+        if(running >= 0) tick_run(running, &time_quantum);
+        if(gantt_n < MAX_GANTT) gantt_pid[gantt_n++] = (running >= 0) ? running : -1;
+        for(int i = 0; i < scen_proc_n; i++){
+            if(scen_proc[i].state != WAITING) continue;
+            if(scen_proc[i].event_idx < 0 || scen_proc[i].events == NULL) continue;
+            EVENT* ev = &scen_proc[i].events[scen_proc[i].event_idx];
+            ev->left_time--; scen_proc[i].total_blocked_time++; scen_proc[i].IO_burst_time++;
+            if(ev->left_time == 0){
+                scen_proc[i].event_idx++; if(scen_proc[i].event_idx == scen_proc[i].event_n) scen_proc[i].event_idx = -1;
+                mb_enqueue(i);
+            }
+        }
+        int prev = running, tqd = TIME_QUANTUM;
+        check_terminate(&running, t, &tqd);
+        if(prev >= 0 && running < 0) cur_side ^= 1;
+    }
+    while(gantt_n > 0 && gantt_pid[gantt_n - 1] == -1) gantt_n--;
+    finalize_stats(MULTIBOUND);
+}

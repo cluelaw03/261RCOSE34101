@@ -25,5 +25,10 @@ int main(void) {
     simulate_6(RR);
     print_result(RR);
 
+    simulate_with_aging_priority();
+    print_result(AGING);
+    simulate_with_multibound();
+    print_result(MULTIBOUND);
+
     return 0;
 }

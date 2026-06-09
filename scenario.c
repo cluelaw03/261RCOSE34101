@@ -11,18 +11,18 @@ void create_one_process(int arrival_time, int priority, int i){
     scen_proc[i].state        = NEW;
     int rand = rand_range(1,100);
 
-    //10% CPU_Bound, 30% Normal, 60% IO_Bound
+//10% CPU_Bound, 30% Normal, 60% IO_Bound
     if(rand<=10){
         scen_proc[i].type         = CPU_Bound;
-        scen_proc[i].cpu_burst    = rand_range(20, 50);
+        scen_proc[i].cpu_burst    = rand_range(8, 18);   // 기존 20,50
     }
     else if(rand<=40){
         scen_proc[i].type         = Normal;
-        scen_proc[i].cpu_burst    = rand_range(10, 30);
+        scen_proc[i].cpu_burst    = rand_range(5, 12);   // 기존 10,30
     }
     else{
         scen_proc[i].type         = IO_Bound;
-        scen_proc[i].cpu_burst    = rand_range(5, 15);
+        scen_proc[i].cpu_burst    = rand_range(5, 9);    // 기존 5,15
     }
 
     create_IOs(&scen_proc[i]);
@@ -47,12 +47,14 @@ void create_IO(Process* proc){
         return;
     }
     
-    int seg_size = proc->cpu_burst / (proc->event_n + 1);
-        if (seg_size < 2) {
+    int max_fit = proc->cpu_burst / 2 - 1;   /* n/(event_n+1) >= 2  =>  event_n <= n/2 - 1 */
+    if (proc->event_n > max_fit) proc->event_n = max_fit;
+    if (proc->event_n <= 0) {
         proc->event_n = 0;
         proc->events  = NULL;
         return;
     }
+    int seg_size = proc->cpu_burst / (proc->event_n + 1);
 
     proc->events = (EVENT *)malloc(sizeof(EVENT) * proc->event_n);
     if (!proc->events) {

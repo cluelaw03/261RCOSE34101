@@ -11,6 +11,11 @@ extern int scen_proc_n;                 /* 시나리오 생성된 프로세스 �
 extern PQueue ready_q;                              /* Ready Queue (우선순위 큐) */
 extern Queue wait_q;                               /* Waiting Queue (I/O 중) */
 extern Queue ready_fifo;                              /* Ready Queue (FCFS) */
+
+/*Multibound 스케줄링 용 큐 2개*/
+extern Queue rq_io;           //IO바운드
+extern Queue rq_cpu;          //Cpu바운드
+
 extern bool is_ready_fifo;                            /* RR 알고리즘에서 ready_fifo 사용 여부 */
 extern PQueue JOB_q;                                /* Job Queue (도착 안 한 프로세스) */
 extern int proc_percentage;              /* 시나리오 생성 시 사용할 확률 (%) */
