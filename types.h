@@ -3,9 +3,9 @@
 
 #include <stdbool.h>
 
-#define MAX_PROCESS  4     /* 최대 프로세스 수 */
-#define MAX_TIME     200   /* 시뮬레이션 안전 한계 시간 */
-#define MAX_GANTT    200   /* 간트 차트 최대 길이 */
+#define MAX_PROCESS  101     /* 최대 프로세스 수 */
+#define MAX_TIME     2000   /* 시뮬레이션 안전 한계 시간 */
+#define MAX_GANTT    2001   /* 간트 차트 최대 길이 */
 #define TIME_QUANTUM 3      /* Round Robin 의 타임 퀀텀 */
 #define ALG_N         8      /* 알고리즘 수 */
 #define PRIO_MIN       1
@@ -59,6 +59,8 @@ typedef struct {
     int normal_burst_min, normal_burst_max;  /* Normal   버스트 범위 */
     int io_burst_min,     io_burst_max;      /* IO_Bound 버스트 범위 */
     int time_quantum;                        /* Round Robin 타임 퀀텀 */
+    int Max_Process;
+    int Max_Time;
 } SimConfig;
 
 #endif /* TYPES_H */

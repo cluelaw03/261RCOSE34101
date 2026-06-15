@@ -2,13 +2,14 @@
 #define PQUEUE_H
 
 #include "types.h"
+#include "globals.h"
 
 /* 두 프로세스 인덱스 a, b 를 비교.
  * 반환값 < 0 이면 a 가 b 보다 먼저 나와야 함(우선순위 높음). */
 typedef int (*pq_cmp_fn)(int a, int b);
 
 typedef struct {
-    int       heap[MAX_PROCESS];  /* 프로세스 인덱스를 저장하는 힙 */
+    int       heap[cfg.Max_Process];  /* 프로세스 인덱스를 저장하는 힙 */
     int       size;
     pq_cmp_fn cmp;
 } PQueue;
@@ -20,7 +21,7 @@ int  pq_peek(PQueue *pq);   /* 꺼내지 않고 확인, 비었으면 -1 */
 int  pq_empty(PQueue *pq);
 
 typedef struct {
-    int items[MAX_PROCESS];   /* 프로세스 인덱스를 저장하는 원형 버퍼 */
+    int items[cfg.Max_Process];   /* 프로세스 인덱스를 저장하는 원형 버퍼 */
     int head;                 /* 다음에 꺼낼(front) 위치 */
     int tail;                 /* 다음에 넣을(back) 위치 */
     int size;                 /* 현재 들어있는 원소 수 */

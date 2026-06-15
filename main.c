@@ -22,15 +22,23 @@ int main(void) {
         cfg.normal_burst_min = 5;   cfg.normal_burst_max = 12;
         cfg.io_burst_min     = 5;   cfg.io_burst_max     = 9;
         cfg.time_quantum     = 3;
+        cfg.Max_Process=MAX_PROCESS; cfg.Max_Time=MAX_TIME;
     }
     else{
         /* 입력받은 [4, max] 를 3등분해 bound별 범위 결정 (최소 4 고정) */
         int burst_max;
+        printf("시나리오 최대 시간(최대 2000까지만): ");
+        scanf("%d", &cfg.Max_Time);
+        if(cfg.Max_Time>2000) cfg.Max_Time=2000;
+        printf("시나리오 내 프로세스 최대 개수(최대 100까지만): ");
+        scanf("%d",&cfg.Max_Time);
+        if(cfg.Max_Process>100) cfg.Max_Process=100;
         printf("CPU 버스트 최대값 (최소는 4 고정): ");
         scanf("%d", &burst_max);
         printf("Round Robin 타임 퀀텀: ");
         scanf("%d", &cfg.time_quantum);
         if(cfg.time_quantum < 1) cfg.time_quantum = 1;
+        
 
         int lo = 4;
         if(burst_max < lo + 6) burst_max = lo + 6;   /* 밴드 뭉개짐 방지 */

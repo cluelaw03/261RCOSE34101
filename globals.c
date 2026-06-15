@@ -41,4 +41,6 @@ SimConfig cfg = {//기본값 설정
     .normal_burst_min = 5,  .normal_burst_max = 12,
     .io_burst_min     = 5,  .io_burst_max     = 9,
     .time_quantum     = TIME_QUANTUM
+    .Max_Time= MAX_TIME;
+    .Max_Process= MAX_PROCESS;
 };

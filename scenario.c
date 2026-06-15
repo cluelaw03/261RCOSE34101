@@ -120,9 +120,9 @@ void create_IOs(Process* proc){
 void create_senario(void) {
     int ti=0;
     scen_proc_n=0;
-    while(ti<MAX_TIME){
+    while(ti<cfg.Max_Time){
         int r = rand_range(1,100);
-        if((r<=proc_percentage)&&(scen_proc_n<MAX_PROCESS)){
+        if((r<=proc_percentage)&&(scen_proc_n<cfg.Max_Process)){
             create_one_process(ti,rand_range(1,10),scen_proc_n);
             scen_proc_n++;
         }
@@ -130,9 +130,11 @@ void create_senario(void) {
     }
 }
 
+/*
 void process_interrupt_check(void){
     for(int i=0;i<scen_proc_n;i++){
         Process p = scen_proc[i];
         printf("pid : %d, state : %d start_time : %d duration : %d\n",p.real_pid,p.state,p.arrival_time,p.cpu_burst);
     }
 }
+    */

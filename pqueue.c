@@ -47,16 +47,16 @@ void q_init(Queue *q) {
 }
  
 void q_push(Queue *q, int idx) {
-    if (q->size >= MAX_PROCESS) return;   /* 가득 차면 무시(안전장치) */
+    if (q->size >= cfg.Max_Process) return;   /* 가득 차면 무시(안전장치) */
     q->items[q->tail] = idx;
-    q->tail = (q->tail + 1) % MAX_PROCESS;
+    q->tail = (q->tail + 1) % cfg.Max_Process;
     q->size++;
 }
  
 int q_pop(Queue *q) {
     if (q->size == 0) return -1;          /* 비었으면 -1 */
     int front = q->items[q->head];
-    q->head = (q->head + 1) % MAX_PROCESS;
+    q->head = (q->head + 1) % cfg.Max_Process;
     q->size--;
     return front;
 }

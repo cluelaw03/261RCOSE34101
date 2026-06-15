@@ -129,7 +129,7 @@ void simulate_6(Schedule_Type alg){
     int proc_counted = 0;
     int proc_time = (scen_proc_n > 0) ? scen_proc[0].arrival_time : -1;
 
-    for (int t = 0; t < MAX_TIME; t++) {
+    for (int t = 0; t < cfg.Max_Time; t++) {
 
         /* 1) 도착 → 레디큐 */
         while(proc_time == t){
@@ -226,7 +226,7 @@ void simulate_with_aging_priority(void){
     int proc_counted = 0;
     int proc_time = (scen_proc_n > 0) ? scen_proc[0].arrival_time : -1;
 
-    for(int t = 0; t < MAX_TIME; t++){
+    for(int t = 0; t < cfg.Max_Time; t++){
 
         /* 1) 도착 → READY */
         while(proc_time == t){
@@ -278,7 +278,7 @@ void simulate_with_aging_priority(void){
         }
 
         /* 5) CPU 1틱 (aging 은 퀀텀 없음) */
-        if(running >= 0){ int tq = MAX_TIME; tick_run(running, &tq); }
+        if(running >= 0){ int tq = cfg.Max_Time; tick_run(running, &tq); }
 
         /* 6) 간트 기록 (CPU 점유만; IO 는 병렬 진행이라 표기하지 않음) */
         if(gantt_n < MAX_GANTT) gantt_pid[gantt_n++] = (running >= 0) ? running : -1;
@@ -323,9 +323,9 @@ void simulate_with_multibound(void){ //비동기식으로 스케줄링 되기떄
     q_init(&rq_io); q_init(&rq_cpu); //2개 레디큐 준비
     int running = -1, proc_counted = 0;  //기본 파라미터 설정
     int proc_time = (scen_proc_n > 0) ? scen_proc[0].arrival_time : -1;
-    int cur_side = 1, time_quantum = TIME_QUANTUM;
+    int cur_side = 1, time_quantum = cfg.time_quantum;
 
-    for(int t = 0; t < MAX_TIME; t++){
+    for(int t = 0; t <cfg.Max_Time; t++){
         while(proc_time == t){ //특이점으로는 enque할때 어디 큐에 넣을지 결정해야함
             scen_proc[proc_counted].pid = proc_counted; mb_enqueue(proc_counted); proc_counted++;
             proc_time = (proc_counted < scen_proc_n) ? scen_proc[proc_counted].arrival_time : -1; //프로세스 발생할거 더 없음처리 -1
@@ -341,7 +341,7 @@ void simulate_with_multibound(void){ //비동기식으로 스케줄링 되기떄
             if(running < 0){
                 running = mb_dispatch(cur_side); //2개의 큐중 값 뽑기
                 if(running < 0) break; //전부 비면  break
-                scen_proc[running].state = RUNNING; time_quantum = TIME_QUANTUM;
+                scen_proc[running].state = RUNNING; time_quantum = cfg.time_quantum;
             }
             Process* p = &scen_proc[running];
             bool has_event = (p->event_idx >= 0 && p->events != NULL);
