@@ -5,9 +5,9 @@
 #include "utils.h"
 
 int gen_unique_real_pid(){
-    int cand = rand_range(100, 999);
+    int cand = rand_range(1000, 9999);
     while(is_duplicated[cand]){
-        cand = rand_range(100, 999);
+        cand = rand_range(1000, 9999);
     }
     is_duplicated[cand]=true;
     return cand;
@@ -130,11 +130,13 @@ void create_senario(void) {
     }
 }
 
-/*
+
 void process_interrupt_check(void){
     for(int i=0;i<scen_proc_n;i++){
         Process p = scen_proc[i];
-        printf("pid : %d, state : %d start_time : %d duration : %d\n",p.real_pid,p.state,p.arrival_time,p.cpu_burst);
+        printf("pid : %d, start_time : %d duration : %d\n",p.real_pid,p.arrival_time,p.cpu_burst);
+        for(int j=0;j<p.event_n;j++){
+            printf(" |--- event_n: %d, event_start: %d, event_dur: %d\n",j,p.events[j].start_time, p.events[j].duration);
+        }
     }
 }
-    */

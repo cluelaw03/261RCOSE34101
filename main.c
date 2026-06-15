@@ -22,7 +22,7 @@ int main(void) {
         cfg.normal_burst_min = 5;   cfg.normal_burst_max = 12;
         cfg.io_burst_min     = 5;   cfg.io_burst_max     = 9;
         cfg.time_quantum     = 3;
-        cfg.Max_Process=MAX_PROCESS; cfg.Max_Time=MAX_TIME;
+        cfg.Max_Process=6; cfg.Max_Time=150;
     }
     else{
         /* 입력받은 [4, max] 를 3등분해 bound별 범위 결정 (최소 4 고정) */
@@ -31,7 +31,7 @@ int main(void) {
         scanf("%d", &cfg.Max_Time);
         if(cfg.Max_Time>2000) cfg.Max_Time=2000;
         printf("시나리오 내 프로세스 최대 개수(최대 100까지만): ");
-        scanf("%d",&cfg.Max_Time);
+        scanf("%d",&cfg.Max_Process);
         if(cfg.Max_Process>100) cfg.Max_Process=100;
         printf("CPU 버스트 최대값 (최소는 4 고정): ");
         scanf("%d", &burst_max);
@@ -53,6 +53,8 @@ int main(void) {
     printf("making senario...\n");
     create_senario();
     printf("senario making complete\n");
+
+    process_interrupt_check(void);
 
     while (1)
     {
@@ -119,8 +121,8 @@ int main(void) {
         if(inpu!=1) break;
     }
     for(int k=0;k<8;k++){
+            if(!Was_Scheduled[k]) continue;
             printf("------------------------------------------------------------------------\n");
-            
 
             printf("%d\n Completed : %d / %d\n",k ,result_done[k], result_total[k]);
             printf(" Avg Waiting    (completed only) : %.2f\n", result_wait[k]);

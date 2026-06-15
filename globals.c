@@ -1,7 +1,7 @@
 #include "globals.h"
 
 Process scen_proc[MAX_PROCESS];
-bool is_duplicated[1000];
+bool is_duplicated[10000];
 
 int scen_proc_n=0;                 /* 시나리오 생성된 프로세스 수 */
 
@@ -17,7 +17,7 @@ Queue rq_io;
 Queue rq_cpu;
 
 
-int proc_percentage=10;              /* 시나리오 생성 시 사용할 확률 (%) */
+int proc_percentage=20;              /* 시나리오 생성 시 사용할 확률 (%) */
 int intr_percentage=5;             /* 시나리오 생성 시 사용할 확률 (%) */
 bool isblocked;
 
@@ -40,7 +40,7 @@ SimConfig cfg = {//기본값 설정
     .cpu_burst_min    = 8,  .cpu_burst_max    = 18,
     .normal_burst_min = 5,  .normal_burst_max = 12,
     .io_burst_min     = 5,  .io_burst_max     = 9,
-    .time_quantum     = TIME_QUANTUM
-    .Max_Time= MAX_TIME;
+    .time_quantum     = TIME_QUANTUM,
+    .Max_Time= MAX_TIME,
     .Max_Process= MAX_PROCESS;
 };
