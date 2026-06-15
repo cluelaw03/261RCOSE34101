@@ -3,6 +3,7 @@
 
 #include "types.h"
 
+int gen_unique_real_pid();
 void create_senario(void);
 void create_one_process(int arrival_time, int priority, int i);
 void create_IOs(Process* proc);

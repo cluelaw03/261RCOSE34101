@@ -1,6 +1,7 @@
 #include "globals.h"
 
 Process scen_proc[MAX_PROCESS];
+bool is_duplicated[1000];
 
 int scen_proc_n=0;                 /* 시나리오 생성된 프로세스 수 */
 

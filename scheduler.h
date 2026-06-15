@@ -12,9 +12,9 @@ void simulate_with_multibound(void);
 
 
 void tick_run(int running, int* time_quantum);
-void tick_interrupt(EVENT* event, bool* is_interrupt);
+//void tick_interrupt(EVENT* event, bool* is_interrupt);
 void check_terminate(int *running, int t);
 void finalize_stats(Schedule_Type alg);
-void apply_interrupts(EVENT* event, int* ran);
+//void apply_interrupts(EVENT* event, int* ran);
 
 #endif /* SCHEDULER_H */

@@ -5,6 +5,7 @@
 #include "pqueue.h"
 
 extern Process scen_proc[MAX_PROCESS];
+extern bool is_duplicated[1000];
 
 extern int scen_proc_n;                 /* 시나리오 생성된 프로세스 수 */
 

@@ -3,9 +3,9 @@
 
 #include <stdbool.h>
 
-#define MAX_PROCESS  20     /* 최대 프로세스 수 */
-#define MAX_TIME     500   /* 시뮬레이션 안전 한계 시간 */
-#define MAX_GANTT    500   /* 간트 차트 최대 길이 */
+#define MAX_PROCESS  4     /* 최대 프로세스 수 */
+#define MAX_TIME     200   /* 시뮬레이션 안전 한계 시간 */
+#define MAX_GANTT    200   /* 간트 차트 최대 길이 */
 #define TIME_QUANTUM 3      /* Round Robin 의 타임 퀀텀 */
 #define ALG_N         8      /* 알고리즘 수 */
 #define PRIO_MIN       1
@@ -37,6 +37,7 @@ typedef struct{
 
 /* 구조체 자료형 정의--------------------------------------------------- */
 typedef struct {
+    int real_pid;
     int pid;    int arrival_time;   int cpu_burst;  int priority;
     State state;
     Process_type type;

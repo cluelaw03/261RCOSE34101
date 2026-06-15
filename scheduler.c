@@ -4,6 +4,7 @@
 #include "utils.h"
 #include "pqueue.h"
 #include "scenario.h"
+#include <stdio.h>
 
 /* FCFS: 도착 시각이 빠른 순. 같으면 pid 가 작은 순(먼저 생성된 프로세스). */
 int cmp_fcfs(int a, int b) {
@@ -27,6 +28,7 @@ void tick_run(int running, int* time_quantum){
     scen_proc[running].executed_cpu++;
     (*time_quantum)--;
 }
+/*
 void tick_interrupt(EVENT* event, bool* is_interrupt){
     int target=event->target_pid;
     event->left_time--;
@@ -69,7 +71,7 @@ void apply_interrupts(EVENT* event,int* ran){
         default: break;
    }
 }
-
+*/
 void check_terminate(int *running, int t) {
     if ((*running) < 0) return;
     Process* now_process=&scen_proc[*running];
@@ -103,147 +105,101 @@ void finalize_stats(Schedule_Type algo) {
 
 
 void simulate_6(Schedule_Type alg){
-    bool is_preemptive=false; int time_quantum=MAX_TIME; bool is_interrupt = false;
+    bool is_preemptive = false;
+    int  time_quantum  = MAX_TIME;
     int (*pick_func)(int,int);
 
     switch(alg) {
-        case FCFS: {
-            pick_func = cmp_fcfs;
-            break;
-        }
-        case SJF_NP: {
-            pick_func = cmp_remaining;
-            break;
-        }
-        case SJF_P: {
-            is_preemptive=true;
-            pick_func = cmp_remaining;
-            break;
-        }
-        case PRIO_NP: {
-            pick_func = cmp_priority;
-            break;
-        }
-        case PRIO: {
-            is_preemptive=true;
-            pick_func = cmp_priority;
-            break;
-        }
-        case RR: {
-            pick_func = cmp_fcfs;
-            time_quantum=cfg.time_quantum;
-            break;
-        }
-        default: break;
+        case FCFS:    pick_func = cmp_fcfs;                                  break;
+        case SJF_NP:  pick_func = cmp_remaining;                            break;
+        case SJF_P:   is_preemptive = true; pick_func = cmp_remaining;      break;
+        case PRIO_NP: pick_func = cmp_priority;                            break;
+        case PRIO:    is_preemptive = true; pick_func = cmp_priority;       break;
+        case RR:      pick_func = cmp_fcfs; time_quantum = cfg.time_quantum; break;
+        default:      pick_func = cmp_fcfs;                                  break;
     }
 
     reset_test();
-
-    //RR은 우선순위 큐를 사용하면 선입선출에 큰 오류 가능
-    is_ready_fifo = ((alg == RR)||(alg == FCFS));
-    q_init(&ready_fifo);              /* 둘 다 초기화하면 직전 실행 잔여 size가 안 남음 */
-    pq_init(&ready_q, pick_func);     /* RR/FCFS여도 cmp는 항상 유효(cmp_fcfs)하니 init 안전 */
+    is_ready_fifo = ((alg == RR) || (alg == FCFS));
+    q_init(&ready_fifo);
+    pq_init(&ready_q, pick_func);
     q_init(&wait_q);
 
-    int running = -1;  
-    int blocked_idx = -1;
-    int proc_counted=0; 
-    int proc_time = -1;
-
-    if(scen_proc_n>0) proc_time = scen_proc[0].arrival_time;
+    int running = -1;
+    int proc_counted = 0;
+    int proc_time = (scen_proc_n > 0) ? scen_proc[0].arrival_time : -1;
 
     for (int t = 0; t < MAX_TIME; t++) {
 
-        //프로세스 발생처리
-        while(1){
-            if(proc_time==t){//프로세스 발생
-                scen_proc[proc_counted].pid = proc_counted;
-                enqueue_ready(scen_proc[proc_counted].pid);
+        /* 1) 도착 → 레디큐 */
+        while(proc_time == t){
+            scen_proc[proc_counted].pid = proc_counted;
+            enqueue_ready(proc_counted);
+            proc_counted++;
+            proc_time = (proc_counted < scen_proc_n) ? scen_proc[proc_counted].arrival_time : -1;
+        }
 
-                proc_counted++;
+        /* 2) RR 타임아웃: 퀀텀 소진 시 레디큐 뒤로 */
+        if(alg == RR && running >= 0 && time_quantum <= 0){
+            enqueue_ready(running);
+            running = -1;
+        }
 
-                //다음프로세스 시간설정 프로세스의 마지막에 도달한다면 proc_time=-1
-                if(scen_proc_n>proc_counted) proc_time = scen_proc[proc_counted].arrival_time;
-                else {proc_time=-1; break;}
-            }
-            else{
-                break;
+        /* 3) 선점(SJF_P, PRIO): 레디큐 최우선이 실행중보다 우선이면 교체 */
+        if(is_preemptive && running >= 0 && !ready_empty()){
+            int candidate = pq_peek(&ready_q);
+            if(candidate >= 0 && pick_func(candidate, running) < 0){
+                enqueue_ready(running);
+                running = -1;
             }
         }
-        
-        //스케줄링처리
-        if(!ready_empty()){ //레디큐에 건덕지 있음
-            if(running>=0){
-                if(is_preemptive==true){ //선점형만 진입 가능
-                    int candidate = pq_peek(&ready_q); //선점형은 무조건 우선순위큐로 레디큐사용
-                    if(pick_func(candidate, running)<0){ //새로 도착한 프로세스가 실행중인 프로세스보다 우선순위가 높으면 선점 발생
-                        enqueue_ready(running);
-                        running=dequeue_ready();
-                        scen_proc[running].state = RUNNING;
-                        time_quantum = (alg==RR) ? cfg.time_quantum : MAX_TIME;
-                    }
-                }
-                else if(alg==RR && time_quantum<=0){ //RR만 진입 가능
-                    EVENT timeout_event = create_TIMEOUT(&scen_proc[running]);
-                    apply_interrupts(&timeout_event, &running);
-                    running=dequeue_ready();
-                    scen_proc[running].state = RUNNING;
-                    time_quantum = (alg==RR) ? cfg.time_quantum : MAX_TIME;
-                }
-            }
-            else{
-                if(q_peek(&wait_q)==-1){//대기큐에 프로세스 없으므로, block상태아님.
-                    running=dequeue_ready(); //선점형이든 비선점형이든 레디큐에서 프로세스 꺼내서 실행
-                    scen_proc[running].state = RUNNING;
-                    time_quantum = (alg==RR) ? cfg.time_quantum : MAX_TIME;
-                }
-                //else{ IO 진행 } block상태
-            }
-        }
-        //else{레디큐에 프로세스가 없음. 여기서 할거는 없음. 나머지는 tick_run이랑 check_terminate에서 처리.}
 
-        if(running>=0){ //프로세스
+        /* 4) 디스패치 + IO 시점 프로세스는 대기큐로 보내고 다음 작업 확보 (CPU 항상 바쁘게) */
+        bool runnable = false;
+        while(!runnable){
+            if(running < 0){
+                if(ready_empty()) break;          /* 레디큐 빔 → 이번 틱 idle */
+                running = dequeue_ready();
+                scen_proc[running].state = RUNNING;
+                time_quantum = (alg == RR) ? cfg.time_quantum : MAX_TIME;
+            }
             Process* p = &scen_proc[running];
             bool has_event = (p->event_idx >= 0 && p->events != NULL);
-
             if(has_event && p->executed_cpu == p->events[p->event_idx].start_time){
-                is_interrupt=true;
-                p->events[p->event_idx].target_pid = running;
-                blocked_idx = running;
-                apply_interrupts(&p->events[p->event_idx], &running);
-                
-                int io_idx = blocked_idx;                 // 이 틱은 io_idx 의 IO
-                Process* bp = &scen_proc[io_idx];
-                tick_interrupt(&bp->events[bp->event_idx], &is_interrupt);
-                if(!is_interrupt) blocked_idx = -1;         // IO 끝나면 비움, io가 1짜리인경우
-                if(gantt_n < MAX_GANTT) gantt_pid[gantt_n++] = -(io_idx + 2); //간트기록
-            }
-            else{
-                tick_run(running, &time_quantum);
-                if(gantt_n < MAX_GANTT) gantt_pid[gantt_n++] = running;   //간트기록
-            }
-        }
-        else{
-            if(is_interrupt){
-                int io_idx = blocked_idx;
-                Process* bp = &scen_proc[io_idx];
-                tick_interrupt(&bp->events[bp->event_idx], &is_interrupt);
-                if(!is_interrupt) blocked_idx = -1;          // IO 끝나면 비움 
-                if(gantt_n < MAX_GANTT) gantt_pid[gantt_n++] = -(io_idx + 2);
-            }
-            else{
-                if(gantt_n < MAX_GANTT) gantt_pid[gantt_n++] = -1;               // idle 셀
-                continue;
+                p->state = WAITING;               /* IO 발동 → 대기큐로, CPU 즉시 해제 */
+                running = -1;
+            } else {
+                runnable = true;
             }
         }
 
+        /* 5) CPU 1틱 실행 */
+        if(running >= 0) tick_run(running, &time_quantum);
 
-        check_terminate(&running, t); //실행중인 프로세스 종료 체크 및 running -1
+        /* 6) 간트 기록 (CPU 점유만; IO 는 병렬 진행이라 표기하지 않음) */
+        if(gantt_n < MAX_GANTT) gantt_pid[gantt_n++] = (running >= 0) ? running : -1;
+
+        /* 7) 모든 WAITING 프로세스 IO 1틱 병렬 진행, 완료 시 레디큐 복귀 */
+        for(int i = 0; i < scen_proc_n; i++){
+            if(scen_proc[i].state != WAITING) continue;
+            if(scen_proc[i].event_idx < 0 || scen_proc[i].events == NULL) continue;
+            EVENT* ev = &scen_proc[i].events[scen_proc[i].event_idx];
+            ev->left_time--;
+            scen_proc[i].total_blocked_time++;
+            scen_proc[i].IO_burst_time++;
+            if(ev->left_time == 0){
+                scen_proc[i].event_idx++;
+                if(scen_proc[i].event_idx == scen_proc[i].event_n) scen_proc[i].event_idx = -1;
+                enqueue_ready(i);
+            }
+        }
+
+        /* 8) 종료 처리 */
+        check_terminate(&running, t);
     }
-    while(gantt_n > 0 && gantt_pid[gantt_n - 1] == -1) gantt_n--;  // 후행 idle 제거
-    finalize_stats(alg);         //결과 계산 및 저장 
+    while(gantt_n > 0 && gantt_pid[gantt_n - 1] == -1) gantt_n--;
+    finalize_stats(alg);
 }
-
 
 //큐안에 들어있는동안 우선순위 변동으로 내부 변동 반영해야해서 기존의 pq사용불가
 //priority를 기준으로 뽑되, 같을경우 pid가 낮은것(먼저 발생했던 프로세스)고르기
@@ -262,25 +218,26 @@ static int pick_ready_aging(void){
 
 void simulate_with_aging_priority(void){
     reset_test();
-    for(int i=0;i<scen_proc_n;i++){//reset_test에서 못한 초기화 마저하기==> 기존과의 차이점
+    for(int i=0;i<scen_proc_n;i++){          /* reset_test 가 못한 aging 전용 초기화 */
         scen_proc[i].cur_priority = scen_proc[i].priority;
         scen_proc[i].age = 0;
     }
-    //초기 지역변수 파라미터 설정
-    int running = -1, blocked_idx = -1;
-    bool is_interrupt = false;
+    int running = -1;
     int proc_counted = 0;
     int proc_time = (scen_proc_n > 0) ? scen_proc[0].arrival_time : -1;
 
-
     for(int t = 0; t < MAX_TIME; t++){
-        while(proc_time == t){//기존이랑 동일
+
+        /* 1) 도착 → READY */
+        while(proc_time == t){
             scen_proc[proc_counted].pid = proc_counted;
             scen_proc[proc_counted].state = READY;
             proc_counted++;
-            proc_time = (proc_counted < scen_proc_n) ? scen_proc[proc_counted].arrival_time : -1; 
+            proc_time = (proc_counted < scen_proc_n) ? scen_proc[proc_counted].arrival_time : -1;
         }
-        for(int i = 0; i < scen_proc_n; i++){ //레디큐에서 기다리고 있을 프로세스에 에이징처리용 파라미터 업데이트 및 일정이상 파라미터 되면 우선순위 높이기
+
+        /* 2) Aging: READY 대기 프로세스 나이 증가 → 임계치마다 우선순위 상승 */
+        for(int i = 0; i < scen_proc_n; i++){
             if(scen_proc[i].state == READY && i != running){
                 scen_proc[i].age++;
                 if(scen_proc[i].age >= AGING_INTERVAL){
@@ -290,50 +247,58 @@ void simulate_with_aging_priority(void){
             }
         }
 
-        //스케줄링처리
-        if(!is_interrupt){
-            int best = pick_ready_aging(); 
-            if(running < 0){
-                if(best >= 0){ running = best; scen_proc[running].state = RUNNING; scen_proc[running].age = 0; }//best가 음수는 큐가 비어있어서 꺼낼거 없음
-            } else if(best >= 0 && best != running
-                      && scen_proc[best].cur_priority < scen_proc[running].cur_priority){
+        /* 3) 선점: READY 최우선이 실행중보다 우선이면 교체 */
+        if(running >= 0){
+            int best = pick_ready_aging();
+            if(best >= 0 && best != running
+               && scen_proc[best].cur_priority < scen_proc[running].cur_priority){
                 scen_proc[running].state = READY;
-                running = best; scen_proc[running].state = RUNNING; scen_proc[running].age = 0;
+                running = -1;
             }
         }
 
-
-        if(running >= 0){
+        /* 4) 디스패치 + IO 시점 프로세스는 대기로 보내고 다음 작업 확보 (CPU 항상 바쁘게) */
+        bool runnable = false;
+        while(!runnable){
+            if(running < 0){
+                int best = pick_ready_aging();
+                if(best < 0) break;                 /* READY 없음 → 이번 틱 idle */
+                running = best;
+                scen_proc[running].state = RUNNING;
+                scen_proc[running].age = 0;
+            }
             Process* p = &scen_proc[running];
             bool has_event = (p->event_idx >= 0 && p->events != NULL);
-            if(has_event && p->executed_cpu == p->events[p->event_idx].start_time){ //인터럽트 발생
-                p->state = WAITING; blocked_idx = running; running = -1; is_interrupt = true;
-                EVENT* ev = &p->events[p->event_idx];
-                ev->left_time--; p->total_blocked_time++; p->IO_burst_time++;
-                if(ev->left_time == 0){
-                    p->event_idx++; if(p->event_idx == p->event_n) p->event_idx = -1;
-                    p->state = READY; is_interrupt = false; blocked_idx = -1;
-                }
-                if(gantt_n < MAX_GANTT) gantt_pid[gantt_n++] = -(p->pid + 2);
-            } else { //정상작동
-                int tq = MAX_TIME; tick_run(running, &tq);
-                if(gantt_n < MAX_GANTT) gantt_pid[gantt_n++] = running;
-            }
-        } else { 
-            if(is_interrupt){//인터럽트 처리중
-                Process* bp = &scen_proc[blocked_idx];
-                EVENT* ev = &bp->events[bp->event_idx];
-                ev->left_time--; bp->total_blocked_time++; bp->IO_burst_time++;
-                if(gantt_n < MAX_GANTT) gantt_pid[gantt_n++] = -(bp->pid + 2);
-                if(ev->left_time == 0){
-                    bp->event_idx++; if(bp->event_idx == bp->event_n) bp->event_idx = -1;
-                    bp->state = READY; is_interrupt = false; blocked_idx = -1;
-                }
-            } else {//노는상태
-                if(gantt_n < MAX_GANTT) gantt_pid[gantt_n++] = -1;
-                continue;
+            if(has_event && p->executed_cpu == p->events[p->event_idx].start_time){
+                p->state = WAITING;                 /* IO 발동 → 대기, CPU 즉시 해제 */
+                running = -1;
+            } else {
+                runnable = true;
             }
         }
+
+        /* 5) CPU 1틱 (aging 은 퀀텀 없음) */
+        if(running >= 0){ int tq = MAX_TIME; tick_run(running, &tq); }
+
+        /* 6) 간트 기록 (CPU 점유만; IO 는 병렬 진행이라 표기하지 않음) */
+        if(gantt_n < MAX_GANTT) gantt_pid[gantt_n++] = (running >= 0) ? running : -1;
+
+        /* 7) 모든 WAITING 프로세스 IO 1틱 병렬 진행, 완료 시 READY 복귀 */
+        for(int i = 0; i < scen_proc_n; i++){
+            if(scen_proc[i].state != WAITING) continue;
+            if(scen_proc[i].event_idx < 0 || scen_proc[i].events == NULL) continue;
+            EVENT* ev = &scen_proc[i].events[scen_proc[i].event_idx];
+            ev->left_time--;
+            scen_proc[i].total_blocked_time++;
+            scen_proc[i].IO_burst_time++;
+            if(ev->left_time == 0){
+                scen_proc[i].event_idx++;
+                if(scen_proc[i].event_idx == scen_proc[i].event_n) scen_proc[i].event_idx = -1;
+                scen_proc[i].state = READY;
+            }
+        }
+
+        /* 8) 종료 처리 */
         check_terminate(&running, t);
     }
     while(gantt_n > 0 && gantt_pid[gantt_n - 1] == -1) gantt_n--;

@@ -4,10 +4,20 @@
 #include "globals.h"
 #include "utils.h"
 
+int gen_unique_real_pid(){
+    int cand = rand_range(100, 999);
+    while(is_duplicated[cand]){
+        cand = rand_range(100, 999);
+    }
+    is_duplicated[cand]=true;
+    return cand;
+}
+
 void create_one_process(int arrival_time, int priority, int i){ 
     //프로세스 아이디는 시나리오 생성중에 발생하지 않고, 스케줄링때 생성된다고 가정
     scen_proc[i].arrival_time = arrival_time;
     scen_proc[i].priority     = priority;
+    scen_proc[i].real_pid     = gen_unique_real_pid();
     scen_proc[i].state        = NEW;
     int rand = rand_range(1,100);
 
@@ -29,6 +39,7 @@ void create_one_process(int arrival_time, int priority, int i){
 
     return;
 }
+/*
 EVENT create_TIMEOUT(Process* proc){
     EVENT timeout_event;
     timeout_event.type=TIMEOUT;
@@ -39,7 +50,7 @@ EVENT create_TIMEOUT(Process* proc){
 
     return timeout_event;
 }
-
+*/
 
 void create_IO(Process* proc){
     if(proc->event_n<=0){
@@ -122,6 +133,6 @@ void create_senario(void) {
 void process_interrupt_check(void){
     for(int i=0;i<scen_proc_n;i++){
         Process p = scen_proc[i];
-        printf("pid : %d, state : %d start_time : %d duration : %d\n",p.pid,p.state,p.arrival_time,p.cpu_burst);
+        printf("pid : %d, state : %d start_time : %d duration : %d\n",p.real_pid,p.state,p.arrival_time,p.cpu_burst);
     }
 }
