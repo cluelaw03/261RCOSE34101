@@ -54,7 +54,7 @@ int main(void) {
     create_senario();
     printf("senario making complete\n");
 
-    process_interrupt_check(void);
+    process_interrupt_check();
 
     while (1)
     {

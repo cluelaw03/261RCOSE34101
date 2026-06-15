@@ -39,18 +39,7 @@ void create_one_process(int arrival_time, int priority, int i){
 
     return;
 }
-/*
-EVENT create_TIMEOUT(Process* proc){
-    EVENT timeout_event;
-    timeout_event.type=TIMEOUT;
-    timeout_event.target_pid=proc->pid;
-    timeout_event.duration=0;
-    timeout_event.left_time=0;
-    timeout_event.finished=false;
 
-    return timeout_event;
-}
-*/
 
 void create_IO(Process* proc){
     if(proc->event_n<=0){
@@ -85,6 +74,7 @@ void create_IO(Process* proc){
 
         proc->events[i].start_time = start;
         proc->events[i].duration   = rand_range(1, 5);
+        proc->events[i].target_pid=proc->real_pid;
         proc->events[i].type       = IO;
     }
 }

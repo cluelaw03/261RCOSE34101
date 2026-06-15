@@ -28,50 +28,7 @@ void tick_run(int running, int* time_quantum){
     scen_proc[running].executed_cpu++;
     (*time_quantum)--;
 }
-/*
-void tick_interrupt(EVENT* event, bool* is_interrupt){
-    int target=event->target_pid;
-    event->left_time--;
-    scen_proc[target].total_blocked_time++;
-    scen_proc[target].IO_burst_time++;
 
-    if(event->left_time==0){
-        event->finished=true;
-        scen_proc[target].blocked=false;
-        dequeue_wait();
-        enqueue_ready(event->target_pid);
-        scen_proc[target].event_idx++;
-
-        if(scen_proc[target].event_n==scen_proc[target].event_idx)//더이상 할 인터럽트 없음
-            scen_proc[target].event_idx=-1;
-        
-        (*is_interrupt)=false;
-    }
-}
-
-void apply_interrupts(EVENT* event,int* ran){ 
-    int running = event->target_pid; //==peek
-    switch(event->type){
-        case IO:    {
-            if(*ran>=0) {//이제막 시작된 인터럽트의 경우
-                scen_proc[running].blocked = true;
-                enqueue_wait(running);
-                *ran=-1; //이거땜에 ran 추가로 설정
-            }
-
-            break;
-        }
-        case TIMEOUT:{
-            //timeout은 무조건 running>=0
-            enqueue_ready(running);
-            *ran=-1;
-            event->finished=true;
-            break;
-        }
-        default: break;
-   }
-}
-*/
 void check_terminate(int *running, int t) {
     if ((*running) < 0) return;
     Process* now_process=&scen_proc[*running];
@@ -203,7 +160,7 @@ void simulate_6(Schedule_Type alg){
 
 //큐안에 들어있는동안 우선순위 변동으로 내부 변동 반영해야해서 기존의 pq사용불가
 //priority를 기준으로 뽑되, 같을경우 pid가 낮은것(먼저 발생했던 프로세스)고르기
-static int pick_ready_aging(void){
+int pick_ready_aging(void){
     int best = -1;
     for(int i=0;i<scen_proc_n;i++){
         if(scen_proc[i].state != READY) continue;
