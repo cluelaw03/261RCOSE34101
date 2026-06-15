@@ -177,7 +177,7 @@ void simulate_6(Schedule_Type alg){
         if(running >= 0) tick_run(running, &time_quantum);
 
         /* 6) 간트 기록 (CPU 점유만; IO 는 병렬 진행이라 표기하지 않음) */
-        if(gantt_n < MAX_GANTT) gantt_pid[gantt_n++] = (running >= 0) ? running : -1;
+        if(gantt_n < MAX_GANTT) gantt_pid[gantt_n++] = (running >= 0) ? scen_proc[running].real_pid : -1;
 
         /* 7) 모든 WAITING 프로세스 IO 1틱 병렬 진행, 완료 시 레디큐 복귀 */
         for(int i = 0; i < scen_proc_n; i++){
@@ -281,7 +281,7 @@ void simulate_with_aging_priority(void){
         if(running >= 0){ int tq = cfg.Max_Time; tick_run(running, &tq); }
 
         /* 6) 간트 기록 (CPU 점유만; IO 는 병렬 진행이라 표기하지 않음) */
-        if(gantt_n < MAX_GANTT) gantt_pid[gantt_n++] = (running >= 0) ? running : -1;
+        if(gantt_n < MAX_GANTT) gantt_pid[gantt_n++] = (running >= 0) ? scen_proc[running].real_pid: -1;
 
         /* 7) 모든 WAITING 프로세스 IO 1틱 병렬 진행, 완료 시 READY 복귀 */
         for(int i = 0; i < scen_proc_n; i++){
@@ -351,7 +351,7 @@ void simulate_with_multibound(void){ //비동기식으로 스케줄링 되기떄
         }
         //cpu작업및 시간 지남 가정
         if(running >= 0) tick_run(running, &time_quantum);
-        if(gantt_n < MAX_GANTT) gantt_pid[gantt_n++] = (running >= 0) ? running : -1;
+        if(gantt_n < MAX_GANTT) gantt_pid[gantt_n++] = (running >= 0) ? scen_proc[running].real_pid : -1;
         for(int i = 0; i < scen_proc_n; i++){
             if(scen_proc[i].state != WAITING) continue;
             if(scen_proc[i].event_idx < 0 || scen_proc[i].events == NULL) continue;
